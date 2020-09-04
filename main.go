@@ -26,6 +26,7 @@ func main() {
 	}
 
 	router := mux.NewRouter().StrictSlash(true)
-	router.HandleFunc("/times/{id}/days/{date}", dao.GetTimeDayAll).Methods("GET")
+	router.HandleFunc("/time/{id}/days/{date}", dao.GetTimeDayAll).Methods("GET")
+	router.HandleFunc("/time", dao.CreateTime).Methods("POST")
 	log.Fatal(http.ListenAndServe(":8080", router))
 }

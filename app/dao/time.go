@@ -3,15 +3,17 @@ package dao
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"time"
 )
 
 type TimeUser struct {
-	macAddress string
+	MacAddress string
 	Second     int64
 }
 
@@ -42,9 +44,28 @@ func GetTimeDayAll(w http.ResponseWriter, r *http.Request) {
 	timeOutput.Minutes = (totalDayTime / 60) - (timeOutput.Hours * 60)
 
 	beginTimeSeconds := beginDayTime(macAddress, date)
-	timeOutput.BeginTime = beginTimeSeconds // TODO: Если дата меньше сегодняшней, пишем "Вы сегодня не были на работе"
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(beginTimeSeconds)
+}
 
-	json.NewEncoder(w).Encode(timeOutput)
+func CreateTime(w http.ResponseWriter, r *http.Request) {
+	reqBody, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		fmt.Fprintf(w, "Kindly enter data with the event id, title and description only in order to update")
+	}
+
+	var timeUser TimeUser
+	json.Unmarshal(reqBody, &timeUser)
+
+	database := GetDB()
+	_, err = database.Exec("INSERT INTO time (mac_address, second) VALUES ($1, $2)", timeUser.MacAddress, timeUser.Second)
+	if err != nil {
+		panic(err)
+	}
+
+	defer database.Close()
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(1)
 }
 
 func aggregateDayTotalTime(times []*TimeUser) int {
@@ -97,7 +118,7 @@ func getDayTimesByUser(macAddress string, date string) []*TimeUser {
 	times := make([]*TimeUser, 0)
 	for rows.Next() {
 		timeUser := new(TimeUser)
-		err := rows.Scan(&timeUser.macAddress, &timeUser.Second)
+		err := rows.Scan(&timeUser.MacAddress, &timeUser.Second)
 		if err != nil {
 			log.Fatal(err)
 		}
