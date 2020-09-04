@@ -1,0 +1,9 @@
+.idea
+
+config/config.yaml
+vendor/
+
+go.sum
+
+build/officetime
+deploy/deploy.config

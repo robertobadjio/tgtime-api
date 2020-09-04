@@ -1,0 +1,12 @@
+Env: 'dev'
+HostName: 'localhost'
+HostPort: 5432
+DataBaseName: ''
+UserName: ''
+Password: ''
+SslMode: 'disable'
+BotToken: ''
+RouterAddress: ''
+RouterUserName: ''
+RouterPassword: ''
+webHookPath: ''
