@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -17,58 +18,99 @@ type TimeUser struct {
 	Second     int64
 }
 
-type Time struct {
-	Hours     int   `json:"hours"`
-	Minutes   int   `json:"minutes"`
-	BeginTime int64 `json:"beginTime"`
+type Period struct {
+	Id        int    `json:"id"`
+	BeginDate string `json:"beginTime"`
+	EndDate   string `json:"endDate"`
 }
+
+type PeriodUser struct {
+	Period int     `json:"period"`
+	Time   []*Time `json:"time"`
+}
+
+type Time struct {
+	Date      string `json:"date"`
+	Total     int64  `json:"total"`
+	BeginTime int64  `json:"beginTime"`
+	EndTime   int64  `json:"endTime"`
+}
+
+var Db *sql.DB
 
 func GetTimeDayAll(w http.ResponseWriter, r *http.Request) {
 	userId := mux.Vars(r)["id"]
 	date := mux.Vars(r)["date"]
 
-	database := GetDB()
 	var macAddress string
 	var telegramId int64
-	row := database.QueryRow("SELECT u.mac_address, u.telegram_id FROM users u WHERE u.id = $1", userId)
+	row := Db.QueryRow("SELECT u.mac_address, u.telegram_id FROM users u WHERE u.id = $1", userId)
+	err := row.Scan(&macAddress, &telegramId)
+	if err != nil {
+		panic(err)
+	}
+	var timeOutput Time
+	timeOutput.Date = date
+	timeOutput.Total = aggregateDayTotalTime(getDayTimesByUser(macAddress, date))
+	timeOutput.BeginTime = getDayTime(macAddress, date, "ASC")
+
+	json.NewEncoder(w).Encode(timeOutput)
+}
+
+func GetTimeByPeriod(w http.ResponseWriter, r *http.Request) {
+	userId := mux.Vars(r)["id"]
+	period := mux.Vars(r)["period"]
+
+	var macAddress string
+	var telegramId int64
+	row := Db.QueryRow("SELECT u.mac_address, u.telegram_id FROM users u WHERE u.id = $1", userId)
 	err := row.Scan(&macAddress, &telegramId)
 	if err != nil {
 		panic(err)
 	}
 
-	var timeOutput Time
+	row = Db.QueryRow("SELECT p.id, p.begin_at, p.ended_at FROM period p WHERE p.id = $1", period)
+	periodStruct := new(Period)
+	err = row.Scan(&periodStruct.Id, &periodStruct.BeginDate, &periodStruct.EndDate)
+	if err != nil {
+		panic(err)
+	}
+	var response PeriodUser
+	response.Period, _ = strconv.Atoi(period)
 
-	times := getDayTimesByUser(macAddress, date)
-	totalDayTime := aggregateDayTotalTime(times)
-	timeOutput.Hours = totalDayTime / 3600
-	timeOutput.Minutes = (totalDayTime / 60) - (timeOutput.Hours * 60)
+	begin, err := time.Parse(time.RFC3339, periodStruct.BeginDate)
+	end, err := time.Parse(time.RFC3339, periodStruct.EndDate)
+	for curr := begin; curr.Before(end); curr = curr.AddDate(0, 0, 1) {
+		timeStruct := new(Time)
+		timeStruct.Date = curr.Format("2006-01-02")
+		timeStruct.Total = aggregateDayTotalTime(getDayTimesByUser(macAddress, curr.Format("2006-01-02")))
+		timeStruct.BeginTime = getDayTime(macAddress, curr.Format("2006-01-02"), "ASC")
+		timeStruct.EndTime = getDayTime(macAddress, curr.Format("2006-01-02"), "DESC")
+		response.Time = append(response.Time, timeStruct)
+	}
 
-	beginTimeSeconds := beginDayTime(macAddress, date)
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(beginTimeSeconds)
+	json.NewEncoder(w).Encode(response)
 }
 
 func CreateTime(w http.ResponseWriter, r *http.Request) {
 	reqBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		fmt.Fprintf(w, "Kindly enter data with the event id, title and description only in order to update")
+		fmt.Fprintf(w, "Kindly enter data with the mac address and seconds only in order to update")
 	}
 
 	var timeUser TimeUser
 	json.Unmarshal(reqBody, &timeUser)
 
-	database := GetDB()
-	_, err = database.Exec("INSERT INTO time (mac_address, second) VALUES ($1, $2)", timeUser.MacAddress, timeUser.Second)
+	_, err = Db.Exec("INSERT INTO time (mac_address, second) VALUES ($1, $2)", timeUser.MacAddress, timeUser.Second)
 	if err != nil {
 		panic(err)
 	}
 
-	defer database.Close()
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(1)
+	json.NewEncoder(w).Encode(timeUser)
 }
 
-func aggregateDayTotalTime(times []*TimeUser) int {
+func aggregateDayTotalTime(times []*TimeUser) int64 {
 	num := 0
 	for i, time := range times {
 		if i == 0 {
@@ -81,19 +123,24 @@ func aggregateDayTotalTime(times []*TimeUser) int {
 		}
 	}
 
-	return num * 30
+	return int64(num * 30)
 }
 
-func getSecondsByDate(date string) int64 {
+func getSecondsByBeginDate(date string) int64 {
 	t, _ := time.Parse("2006-01-02", date)
 	year, month, day := t.Date()
 	return time.Date(year, month, day, 0, 0, 0, 0, t.Location()).Unix()
 }
 
-func beginDayTime(macAddress string, date string) int64 {
-	database := GetDB()
+func getSecondsByEndDate(date string) int64 {
+	t, _ := time.Parse("2006-01-02", date)
+	year, month, day := t.Date()
+	return time.Date(year, month, day, 23, 59, 59, 0, t.Location()).Unix()
+}
+
+func getDayTime(macAddress string, date string, sort string) int64 {
 	var beginSecond int64
-	row := database.QueryRow("SELECT t.second FROM time t WHERE t.mac_address = $1 AND t.second > $2 ORDER BY t.second ASC LIMIT 1", macAddress, getSecondsByDate(date))
+	row := Db.QueryRow("SELECT t.second FROM time t WHERE t.mac_address = $1 AND t.second BETWEEN $2 AND $3 ORDER BY t.second "+sort+" LIMIT 1", macAddress, getSecondsByBeginDate(date), getSecondsByEndDate(date))
 	err := row.Scan(&beginSecond)
 
 	if err == sql.ErrNoRows {
@@ -108,8 +155,7 @@ func beginDayTime(macAddress string, date string) int64 {
 }
 
 func getDayTimesByUser(macAddress string, date string) []*TimeUser {
-	database := GetDB()
-	rows, err := database.Query("SELECT t.mac_address, t.second FROM time t WHERE t.mac_address = $1 AND t.second >= $2 ORDER BY t.second", macAddress, getSecondsByDate(date))
+	rows, err := Db.Query("SELECT t.mac_address, t.second FROM time t WHERE t.mac_address = $1 AND t.second BETWEEN $2 AND $3 ORDER BY t.second", macAddress, getSecondsByBeginDate(date), getSecondsByEndDate(date))
 	if err != nil {
 		panic(err)
 	}
