@@ -37,10 +37,11 @@ func main() {
 	})
 
 	router := mux.NewRouter().StrictSlash(true)
-	router.HandleFunc("/time/{id}/day/{date}", dao.GetTimeDayAll).Methods("GET")
-	router.HandleFunc("/time/{id}/period/{period}", dao.GetTimeByPeriod).Methods("GET")
-	router.HandleFunc("/time", dao.CreateTime).Methods("POST")
-	router.HandleFunc("/period", dao.GetAllPeriods).Methods("GET")
+	router.HandleFunc("/api-service/time/{id}/day/{date}", dao.GetTimeDayAll).Methods("GET")
+	router.HandleFunc("/api-service/time/{id}/period/{period}", dao.GetTimeByPeriod).Methods("GET")
+	router.HandleFunc("/api-service/time", dao.CreateTime).Methods("POST")
+	router.HandleFunc("/api-service/period", dao.GetAllPeriods).Methods("GET")
+	router.HandleFunc("/api-service/user", dao.GetAllUsers).Methods("GET")
 	log.Fatal(http.ListenAndServe(":8080", c.Handler(router)))
 }
 
