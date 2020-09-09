@@ -127,15 +127,17 @@ func aggregateDayTotalTime(times []*TimeUser) int64 {
 }
 
 func getSecondsByBeginDate(date string) int64 {
-	t, _ := time.Parse("2006-01-02", date)
-	year, month, day := t.Date()
-	return time.Date(year, month, day, 0, 0, 0, 0, t.Location()).Unix()
+	moscowLocation, _ := time.LoadLocation("Europe/Moscow")
+	t, _ := time.ParseInLocation("2006-01-02", date, moscowLocation)
+
+	return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, moscowLocation).Unix()
 }
 
 func getSecondsByEndDate(date string) int64 {
-	t, _ := time.Parse("2006-01-02", date)
-	year, month, day := t.Date()
-	return time.Date(year, month, day, 23, 59, 59, 0, t.Location()).Unix()
+	moscowLocation, _ := time.LoadLocation("Europe/Moscow")
+	t, _ := time.ParseInLocation("2006-01-02", date, moscowLocation)
+
+	return time.Date(t.Year(), t.Month(), t.Day(), 23, 59, 59, 0, t.Location()).Unix()
 }
 
 func getDayTime(macAddress string, date string, sort string) int64 {
