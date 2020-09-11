@@ -20,8 +20,15 @@ type TimeUser struct {
 
 type Period struct {
 	Id        int    `json:"id"`
+	Name      string `json:"name"`
+	Year      int    `json:"year"`
 	BeginDate string `json:"beginTime"`
 	EndDate   string `json:"endDate"`
+}
+
+type Break struct {
+	BeginTime int64 `json:"beginTime"`
+	EndTime   int64 `json:"endTime"`
 }
 
 type PeriodUser struct {
@@ -30,10 +37,11 @@ type PeriodUser struct {
 }
 
 type Time struct {
-	Date      string `json:"date"`
-	Total     int64  `json:"total"`
-	BeginTime int64  `json:"beginTime"`
-	EndTime   int64  `json:"endTime"`
+	Date      string   `json:"date"`
+	Total     int64    `json:"total"`
+	BeginTime int64    `json:"beginTime"`
+	EndTime   int64    `json:"endTime"`
+	Break     []*Break `json:"breaks"`
 }
 
 var Db *sql.DB
@@ -69,9 +77,9 @@ func GetTimeByPeriod(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	row = Db.QueryRow("SELECT p.id, p.begin_at, p.ended_at FROM period p WHERE p.id = $1", period)
+	row = Db.QueryRow("SELECT p.id, p.name, p.year, p.begin_at, p.ended_at FROM period p WHERE p.id = $1", period)
 	periodStruct := new(Period)
-	err = row.Scan(&periodStruct.Id, &periodStruct.BeginDate, &periodStruct.EndDate)
+	err = row.Scan(&periodStruct.Id, &periodStruct.Name, &periodStruct.Year, &periodStruct.BeginDate, &periodStruct.EndDate)
 	if err != nil {
 		panic(err)
 	}
@@ -80,12 +88,21 @@ func GetTimeByPeriod(w http.ResponseWriter, r *http.Request) {
 
 	begin, err := time.Parse(time.RFC3339, periodStruct.BeginDate)
 	end, err := time.Parse(time.RFC3339, periodStruct.EndDate)
+	moscowLocation, _ := time.LoadLocation("Europe/Moscow")
+	now := time.Now().In(moscowLocation)
+	if end.After(now) {
+		end = now
+	}
+
 	for curr := begin; curr.Before(end); curr = curr.AddDate(0, 0, 1) {
 		timeStruct := new(Time)
 		timeStruct.Date = curr.Format("2006-01-02")
-		timeStruct.Total = aggregateDayTotalTime(getDayTimesByUser(macAddress, curr.Format("2006-01-02")))
+		times := getDayTimesByUser(macAddress, curr.Format("2006-01-02"))
+		timeStruct.Total = aggregateDayTotalTime(times)
 		timeStruct.BeginTime = getDayTime(macAddress, curr.Format("2006-01-02"), "ASC")
 		timeStruct.EndTime = getDayTime(macAddress, curr.Format("2006-01-02"), "DESC")
+		timeStruct.Break = getAllBreaksByTimes(times)
+
 		response.Time = append(response.Time, timeStruct)
 	}
 
@@ -110,20 +127,44 @@ func CreateTime(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(timeUser)
 }
 
+func getAllBreaksByTimes(times []*TimeUser) []*Break {
+	breaks := make([]*Break, 0)
+	for i, time := range times {
+		if i == 0 {
+			continue
+		}
+
+		breakStruct := new(Break)
+
+		delta := time.Second - times[i-1].Second
+		if delta <= 33 {
+			continue
+		} else if delta <= (10 * 60) { // TODO: в параметры
+			continue
+		} else {
+			breakStruct.BeginTime = times[i-1].Second
+			breakStruct.EndTime = time.Second
+			breaks = append(breaks, breakStruct)
+		}
+	}
+
+	return breaks
+}
+
 func aggregateDayTotalTime(times []*TimeUser) int64 {
-	num := 0
+	num := 1
 	for i, time := range times {
 		if i == 0 {
 			continue
 		}
 
 		delta := time.Second - times[i-1].Second
-		if delta <= 33 {
+		if delta <= 33 { // TODO: в параметры
 			num++
 		}
 	}
 
-	return int64(num * 30)
+	return int64(num * 30) // TODO: в параметры
 }
 
 func getSecondsByBeginDate(date string) int64 {
