@@ -62,7 +62,10 @@ func GetTimeDayAll(w http.ResponseWriter, r *http.Request) {
 	timeOutput.Total = aggregateDayTotalTime(getDayTimesByUser(macAddress, date))
 	timeOutput.BeginTime = getDayTime(macAddress, date, "ASC")
 
-	json.NewEncoder(w).Encode(timeOutput)
+	err = json.NewEncoder(w).Encode(timeOutput)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func GetTimeByPeriod(w http.ResponseWriter, r *http.Request) {
@@ -116,7 +119,10 @@ func CreateTime(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var timeUser TimeUser
-	json.Unmarshal(reqBody, &timeUser)
+	err = json.Unmarshal(reqBody, &timeUser)
+	if err != nil {
+		panic(err)
+	}
 
 	_, err = Db.Exec("INSERT INTO time (mac_address, second) VALUES ($1, $2)", timeUser.MacAddress, timeUser.Second)
 	if err != nil {
@@ -124,7 +130,10 @@ func CreateTime(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(timeUser)
+	err = json.NewEncoder(w).Encode(timeUser)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func getAllBreaksByTimes(times []*TimeUser) []*Break {

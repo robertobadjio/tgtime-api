@@ -6,6 +6,10 @@ import (
 	"net/http"
 )
 
+type Users struct {
+	Users []*User `json:"users"`
+}
+
 type User struct {
 	Id         int    `json:"id"`
 	Name       string `json:"name"`
@@ -32,5 +36,7 @@ func GetAllUsers(w http.ResponseWriter, r *http.Request) {
 		users = append(users, user)
 	}
 
-	json.NewEncoder(w).Encode(users)
+	var usersStruct Users
+	usersStruct.Users = users
+	json.NewEncoder(w).Encode(usersStruct)
 }
