@@ -23,5 +23,7 @@ func GetAllPeriods(w http.ResponseWriter, r *http.Request) {
 		periods = append(periods, period)
 	}
 
-	json.NewEncoder(w).Encode(periods)
+	var periodsStruct Periods
+	periodsStruct.Periods = periods
+	json.NewEncoder(w).Encode(periodsStruct)
 }

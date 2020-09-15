@@ -26,6 +26,10 @@ type Period struct {
 	EndDate   string `json:"endDate"`
 }
 
+type Periods struct {
+	Periods []*Period `json:"periods"`
+}
+
 type Break struct {
 	BeginTime int64 `json:"beginTime"`
 	EndTime   int64 `json:"endTime"`
