@@ -3,6 +3,7 @@ package dao
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 )
 
 func GetAllPeriods(w http.ResponseWriter, r *http.Request) {
@@ -21,6 +22,14 @@ func GetAllPeriods(w http.ResponseWriter, r *http.Request) {
 		}
 
 		periods = append(periods, period)
+	}
+
+	// TODO: Костыль 2020-06-01T00:00:00Z -> 2020-06-01
+	for key, period := range periods {
+		timeTemp, _ := time.Parse(time.RFC3339, period.BeginDate)
+		periods[key].BeginDate = timeTemp.Format("2006-01-02")
+		timeTemp, _ = time.Parse(time.RFC3339, period.EndDate)
+		periods[key].EndDate = timeTemp.Format("2006-01-02")
 	}
 
 	var periodsStruct Periods
