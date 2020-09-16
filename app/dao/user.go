@@ -2,6 +2,7 @@ package dao
 
 import (
 	"encoding/json"
+	"github.com/gorilla/mux"
 	"log"
 	"net/http"
 )
@@ -39,4 +40,17 @@ func GetAllUsers(w http.ResponseWriter, r *http.Request) {
 	var usersStruct Users
 	usersStruct.Users = users
 	json.NewEncoder(w).Encode(usersStruct)
+}
+
+func GetUser(w http.ResponseWriter, r *http.Request) {
+	userId := mux.Vars(r)["id"]
+
+	user := new(User)
+	row := Db.QueryRow("SELECT u.id, u.name, u.email, u.mac_address, u.telegram_id FROM users u WHERE u.id = $1", userId)
+	err := row.Scan(&user.Id, &user.Name, &user.Email, &user.MacAddress, &user.TelegramId)
+	if err != nil {
+		panic(err)
+	}
+
+	json.NewEncoder(w).Encode(user)
 }
