@@ -40,7 +40,13 @@ func main() {
 	router.HandleFunc("/api-service/time/{id}/day/{date}", dao.GetTimeDayAll).Methods("GET")
 	router.HandleFunc("/api-service/time/{id}/period/{period}", dao.GetTimeByPeriod).Methods("GET")
 	router.HandleFunc("/api-service/time", dao.CreateTime).Methods("POST")
+
 	router.HandleFunc("/api-service/period", dao.GetAllPeriods).Methods("GET")
+	router.HandleFunc("/api-service/period/{id}", dao.GetPeriod).Methods("GET")
+	router.HandleFunc("/api-service/period", dao.CreatePeriod).Methods("POST")
+	router.HandleFunc("/api-service/period/{id}", dao.UpdatePeriod).Methods("PUT")
+	router.HandleFunc("/api-service/period/{id}", dao.DeletePeriod).Methods("DELETE")
+
 	router.HandleFunc("/api-service/user", dao.GetAllUsers).Methods("GET")
 	router.HandleFunc("/api-service/user/{id}", dao.GetUser).Methods("GET")
 	log.Fatal(http.ListenAndServe(":8080", c.Handler(router)))
