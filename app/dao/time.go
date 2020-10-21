@@ -63,8 +63,8 @@ func GetTimeDayAll(w http.ResponseWriter, r *http.Request) {
 	}
 	var timeOutput Time
 	timeOutput.Date = date
-	timeOutput.Total = aggregateDayTotalTime(getDayTimesByUser(macAddress, date))
-	timeOutput.BeginTime = getDayTime(macAddress, date, "ASC")
+	timeOutput.Total = AggregateDayTotalTime(getDayTimesByUser(macAddress, date))
+	timeOutput.BeginTime = GetDayTime(macAddress, date, "ASC")
 
 	err = json.NewEncoder(w).Encode(timeOutput)
 	if err != nil {
@@ -105,10 +105,10 @@ func GetTimeByPeriod(w http.ResponseWriter, r *http.Request) {
 		timeStruct := new(Time)
 		timeStruct.Date = curr.Format("2006-01-02")
 		times := getDayTimesByUser(macAddress, curr.Format("2006-01-02"))
-		timeStruct.Total = aggregateDayTotalTime(times)
-		timeStruct.BeginTime = getDayTime(macAddress, curr.Format("2006-01-02"), "ASC")
-		timeStruct.EndTime = getDayTime(macAddress, curr.Format("2006-01-02"), "DESC")
-		timeStruct.Break = getAllBreaksByTimes(times)
+		timeStruct.Total = AggregateDayTotalTime(times)
+		timeStruct.BeginTime = GetDayTime(macAddress, curr.Format("2006-01-02"), "ASC")
+		timeStruct.EndTime = GetDayTime(macAddress, curr.Format("2006-01-02"), "DESC")
+		timeStruct.Break = GetAllBreaksByTimes(times)
 
 		response.Time = append(response.Time, timeStruct)
 	}
@@ -140,7 +140,7 @@ func CreateTime(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func getAllBreaksByTimes(times []*TimeUser) []*Break {
+func GetAllBreaksByTimes(times []*TimeUser) []*Break {
 	breaks := make([]*Break, 0)
 	for i, time := range times {
 		if i == 0 {
@@ -164,7 +164,7 @@ func getAllBreaksByTimes(times []*TimeUser) []*Break {
 	return breaks
 }
 
-func aggregateDayTotalTime(times []*TimeUser) int64 {
+func AggregateDayTotalTime(times []*TimeUser) int64 {
 	num := 1
 	for i, time := range times {
 		if i == 0 {
@@ -180,23 +180,23 @@ func aggregateDayTotalTime(times []*TimeUser) int64 {
 	return int64(num * 30) // TODO: в параметры
 }
 
-func getSecondsByBeginDate(date string) int64 {
+func GetSecondsByBeginDate(date string) int64 {
 	moscowLocation, _ := time.LoadLocation("Europe/Moscow")
 	t, _ := time.ParseInLocation("2006-01-02", date, moscowLocation)
 
 	return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, moscowLocation).Unix()
 }
 
-func getSecondsByEndDate(date string) int64 {
+func GetSecondsByEndDate(date string) int64 {
 	moscowLocation, _ := time.LoadLocation("Europe/Moscow")
 	t, _ := time.ParseInLocation("2006-01-02", date, moscowLocation)
 
 	return time.Date(t.Year(), t.Month(), t.Day(), 23, 59, 59, 0, t.Location()).Unix()
 }
 
-func getDayTime(macAddress string, date string, sort string) int64 {
+func GetDayTime(macAddress string, date string, sort string) int64 {
 	var beginSecond int64
-	row := Db.QueryRow("SELECT t.second FROM time t WHERE t.mac_address = $1 AND t.second BETWEEN $2 AND $3 ORDER BY t.second "+sort+" LIMIT 1", macAddress, getSecondsByBeginDate(date), getSecondsByEndDate(date))
+	row := Db.QueryRow("SELECT t.second FROM time t WHERE t.mac_address = $1 AND t.second BETWEEN $2 AND $3 ORDER BY t.second "+sort+" LIMIT 1", macAddress, GetSecondsByBeginDate(date), GetSecondsByEndDate(date))
 	err := row.Scan(&beginSecond)
 
 	if err == sql.ErrNoRows {
@@ -211,7 +211,7 @@ func getDayTime(macAddress string, date string, sort string) int64 {
 }
 
 func getDayTimesByUser(macAddress string, date string) []*TimeUser {
-	rows, err := Db.Query("SELECT t.mac_address, t.second FROM time t WHERE t.mac_address = $1 AND t.second BETWEEN $2 AND $3 ORDER BY t.second", macAddress, getSecondsByBeginDate(date), getSecondsByEndDate(date))
+	rows, err := Db.Query("SELECT t.mac_address, t.second FROM time t WHERE t.mac_address = $1 AND t.second BETWEEN $2 AND $3 ORDER BY t.second", macAddress, GetSecondsByBeginDate(date), GetSecondsByEndDate(date))
 	if err != nil {
 		panic(err)
 	}

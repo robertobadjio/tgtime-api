@@ -8,8 +8,11 @@ import (
 	"github.com/rs/cors"
 	"log"
 	"net/http"
+	"officetime-api/app/aggregator"
 	"officetime-api/app/config"
 	"officetime-api/app/dao"
+	"officetime-api/app/model"
+	"time"
 )
 
 var db *sql.DB
@@ -29,6 +32,10 @@ func main() {
 
 	db = getDB()
 	dao.Db = db
+	model.Db = db
+	aggregator.Db = db
+
+	go every12Day()
 
 	fmt.Println("Setting up server, enabling CORS...")
 	c := cors.New(cors.Options{
@@ -50,6 +57,21 @@ func main() {
 	router.HandleFunc("/api-service/user", dao.GetAllUsers).Methods("GET")
 	router.HandleFunc("/api-service/user/{id}", dao.GetUser).Methods("GET")
 	log.Fatal(http.ListenAndServe(":8080", c.Handler(router)))
+}
+
+func every12Day() {
+	t := time.Now()
+	n := time.Date(t.Year(), t.Month(), t.Day(), 12, 0, 0, 0, t.Location())
+	d := n.Sub(t)
+	if d < 0 {
+		n = n.Add(24 * time.Hour)
+		d = n.Sub(t)
+	}
+	for {
+		time.Sleep(d)
+		d = 24 * time.Hour
+		aggregator.AggregateTime()
+	}
 }
 
 func getDB() *sql.DB {
