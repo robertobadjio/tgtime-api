@@ -7,7 +7,6 @@ import (
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -63,7 +62,7 @@ func GetTimeDayAll(w http.ResponseWriter, r *http.Request) {
 	}
 	var timeOutput Time
 	timeOutput.Date = date
-	timeOutput.Total = AggregateDayTotalTime(getDayTimesByUser(macAddress, date))
+	timeOutput.Total = getDayTotalSecondsByUser(macAddress, date)
 	timeOutput.BeginTime = GetDayTime(macAddress, date, "ASC")
 
 	err = json.NewEncoder(w).Encode(timeOutput)
@@ -104,11 +103,10 @@ func GetTimeByPeriod(w http.ResponseWriter, r *http.Request) {
 	for curr := begin; curr.Before(end); curr = curr.AddDate(0, 0, 1) {
 		timeStruct := new(Time)
 		timeStruct.Date = curr.Format("2006-01-02")
-		times := getDayTimesByUser(macAddress, curr.Format("2006-01-02"))
-		timeStruct.Total = AggregateDayTotalTime(times)
+		timeStruct.Total = getDayTotalSecondsByUser(macAddress, curr.Format("2006-01-02"))
 		timeStruct.BeginTime = GetDayTime(macAddress, curr.Format("2006-01-02"), "ASC")
 		timeStruct.EndTime = GetDayTime(macAddress, curr.Format("2006-01-02"), "DESC")
-		timeStruct.Break = GetAllBreaksByTimes(times)
+		timeStruct.Break = GetAllBreaksByTimes(macAddress, curr.Format("2006-01-02"))
 
 		response.Time = append(response.Time, timeStruct)
 	}
@@ -140,28 +138,23 @@ func CreateTime(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func GetAllBreaksByTimes(times []*TimeUser) []*Break {
-	breaks := make([]*Break, 0)
-	for i, time := range times {
-		if i == 0 {
-			continue
-		}
-
-		breakStruct := new(Break)
-
-		delta := time.Second - times[i-1].Second
-		if delta <= 33 {
-			continue
-		} else if delta <= (10 * 60) { // TODO: в параметры
-			continue
-		} else {
-			breakStruct.BeginTime = times[i-1].Second
-			breakStruct.EndTime = time.Second
-			breaks = append(breaks, breakStruct)
-		}
+func GetAllBreaksByTimes(macAddress, date string) []*Break {
+	var breaksJson string
+	row := Db.QueryRow("SELECT ts.breaks FROM time_summary ts WHERE ts.mac_address = $1 AND ts.date = $2", macAddress, date)
+	err := row.Scan(&breaksJson)
+	var s []*Break // TODO: переименовать переменную
+	if err == sql.ErrNoRows {
+		return s
+	}
+	if err != nil {
+		panic(err)
 	}
 
-	return breaks
+	err = json.Unmarshal([]byte(breaksJson), &s)
+	if err != nil {
+		panic(err)
+	}
+	return s
 }
 
 func AggregateDayTotalTime(times []*TimeUser) int64 {
@@ -195,9 +188,17 @@ func GetSecondsByEndDate(date string) int64 {
 }
 
 func GetDayTime(macAddress string, date string, sort string) int64 {
-	var beginSecond int64
-	row := Db.QueryRow("SELECT t.second FROM time t WHERE t.mac_address = $1 AND t.second BETWEEN $2 AND $3 ORDER BY t.second "+sort+" LIMIT 1", macAddress, GetSecondsByBeginDate(date), GetSecondsByEndDate(date))
-	err := row.Scan(&beginSecond)
+	var second int64
+	// TODO: Разделить на отдельные методы
+	var field string
+	if "ASC" == sort {
+		field = "ts.seconds_begin"
+	} else {
+		field = "ts.seconds_end"
+	}
+
+	row := Db.QueryRow("SELECT "+field+" FROM time_summary ts WHERE ts.mac_address = $1 AND ts.date = $2", macAddress, date)
+	err := row.Scan(&second)
 
 	if err == sql.ErrNoRows {
 		return 0
@@ -207,10 +208,25 @@ func GetDayTime(macAddress string, date string, sort string) int64 {
 		panic(err)
 	}
 
-	return beginSecond
+	return second
 }
 
-func getDayTimesByUser(macAddress string, date string) []*TimeUser {
+func getDayTotalSecondsByUser(macAddress, date string) int64 {
+	var seconds int64
+	row := Db.QueryRow("SELECT ts.seconds FROM time_summary ts WHERE ts.mac_address = $1 AND ts.date = $2", macAddress, date)
+	err := row.Scan(&seconds)
+	if err == sql.ErrNoRows {
+		return 0
+	}
+
+	if err != nil {
+		panic(err)
+	}
+
+	return seconds
+}
+
+func GetAllByDate(macAddress string, date string) []*TimeUser {
 	rows, err := Db.Query("SELECT t.mac_address, t.second FROM time t WHERE t.mac_address = $1 AND t.second BETWEEN $2 AND $3 ORDER BY t.second", macAddress, GetSecondsByBeginDate(date), GetSecondsByEndDate(date))
 	if err != nil {
 		panic(err)
@@ -219,13 +235,13 @@ func getDayTimesByUser(macAddress string, date string) []*TimeUser {
 
 	times := make([]*TimeUser, 0)
 	for rows.Next() {
-		timeUser := new(TimeUser)
-		err := rows.Scan(&timeUser.MacAddress, &timeUser.Second)
+		time := new(TimeUser)
+		err := rows.Scan(&time.MacAddress, &time.Second)
 		if err != nil {
-			log.Fatal(err)
+			panic(err)
 		}
 
-		times = append(times, timeUser)
+		times = append(times, time)
 	}
 
 	return times

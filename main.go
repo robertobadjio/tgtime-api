@@ -34,16 +34,16 @@ func main() {
 	dao.Db = db
 	model.Db = db
 	aggregator.Db = db
-
 	go every12Day()
 
 	fmt.Println("Setting up server, enabling CORS...")
 	c := cors.New(cors.Options{
-		AllowedOrigins: []string{"*"}, // All origins
+		AllowedOrigins: []string{"*"},           // All origins
 		AllowedMethods: []string{"GET", "POST"}, // Allowing only get, just an example
 	})
 
 	router := mux.NewRouter().StrictSlash(true)
+
 	router.HandleFunc("/api-service/time/{id}/day/{date}", dao.GetTimeDayAll).Methods("GET")
 	router.HandleFunc("/api-service/time/{id}/period/{period}", dao.GetTimeByPeriod).Methods("GET")
 	router.HandleFunc("/api-service/time", dao.CreateTime).Methods("POST")
@@ -56,6 +56,7 @@ func main() {
 
 	router.HandleFunc("/api-service/user", dao.GetAllUsers).Methods("GET")
 	router.HandleFunc("/api-service/user/{id}", dao.GetUser).Methods("GET")
+
 	log.Fatal(http.ListenAndServe(":8080", c.Handler(router)))
 }
 
