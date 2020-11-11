@@ -63,7 +63,7 @@ func GetTimeDayAll(w http.ResponseWriter, r *http.Request) {
 	var timeOutput Time
 	timeOutput.Date = date
 	timeOutput.Total = getDayTotalSecondsByUser(macAddress, date)
-	timeOutput.BeginTime = GetDayTime(macAddress, date, "ASC")
+	timeOutput.BeginTime = GetDayTimeFromTimeTable(macAddress, date, "ASC")
 
 	err = json.NewEncoder(w).Encode(timeOutput)
 	if err != nil {
@@ -170,6 +170,10 @@ func AggregateDayTotalTime(times []*TimeUser) int64 {
 		}
 	}
 
+	if 1 == num {
+		return 0
+	}
+
 	return int64(num * 30) // TODO: в параметры
 }
 
@@ -211,14 +215,37 @@ func GetDayTime(macAddress string, date string, sort string) int64 {
 	return second
 }
 
+func GetDayTimeFromTimeTable(macAddress string, date string, sort string) int64 {
+	var beginSecond int64
+	row := Db.QueryRow("SELECT t.second FROM time t WHERE t.mac_address = $1 AND t.second BETWEEN $2 AND $3 ORDER BY t.second "+sort+" LIMIT 1", macAddress, GetSecondsByBeginDate(date), GetSecondsByEndDate(date))
+	err := row.Scan(&beginSecond)
+
+	if err == sql.ErrNoRows {
+		return 0
+	}
+
+	if err != nil {
+		panic(err)
+	}
+
+	return beginSecond
+}
+
 func getDayTotalSecondsByUser(macAddress, date string) int64 {
 	var seconds int64
+
+	dateToday, _ := time.Parse("2006-01-02", date)
+	now := time.Now()
+	if dateToday.Year() == now.Year() && dateToday.Month() == now.Month() && dateToday.Day() == now.Day() {
+		times := GetAllByDate(macAddress, date)
+		return AggregateDayTotalTime(times)
+	}
+
 	row := Db.QueryRow("SELECT ts.seconds FROM time_summary ts WHERE ts.mac_address = $1 AND ts.date = $2", macAddress, date)
 	err := row.Scan(&seconds)
 	if err == sql.ErrNoRows {
 		return 0
 	}
-
 	if err != nil {
 		panic(err)
 	}

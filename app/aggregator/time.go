@@ -19,8 +19,8 @@ func AggregateTime() {
 		seconds := dao.AggregateDayTotalTime(times)
 		breaks := dao.GetAllBreaksByTimes(user.MacAddress, date)
 		breaksJson, err := json.Marshal(breaks)
-		begin := dao.GetDayTime(user.MacAddress, date, "ASC")
-		end := dao.GetDayTime(user.MacAddress, date, "DESC")
+		begin := dao.GetDayTimeFromTimeTable(user.MacAddress, date, "ASC")
+		end := dao.GetDayTimeFromTimeTable(user.MacAddress, date, "DESC")
 
 		_, err = Db.Exec("INSERT INTO time_summary (mac_address, date, seconds, breaks, seconds_begin, seconds_end) VALUES ($1, $2, $3, $4, $5, $6)", user.MacAddress, date, seconds, breaksJson, begin, end)
 		if err != nil {
