@@ -157,6 +157,30 @@ func GetAllBreaksByTimes(macAddress, date string) []*Break {
 	return s
 }
 
+func GetAllBreaksByTimesOld(times []*TimeUser) []*Break {
+	breaks := make([]*Break, 0)
+	for i, time := range times {
+		if i == 0 {
+			continue
+		}
+
+		breakStruct := new(Break)
+
+		delta := time.Second - times[i-1].Second
+		if delta <= 33 {
+			continue
+		} else if delta <= (10 * 60) { // TODO: в параметры
+			continue
+		} else {
+			breakStruct.BeginTime = times[i-1].Second
+			breakStruct.EndTime = time.Second
+			breaks = append(breaks, breakStruct)
+		}
+	}
+
+	return breaks
+}
+
 func AggregateDayTotalTime(times []*TimeUser) int64 {
 	num := 1
 	for i, time := range times {
