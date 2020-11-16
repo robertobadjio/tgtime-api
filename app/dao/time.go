@@ -64,6 +64,7 @@ func GetTimeDayAll(w http.ResponseWriter, r *http.Request) {
 	timeOutput.Date = date
 	timeOutput.Total = getDayTotalSecondsByUser(macAddress, date)
 	timeOutput.BeginTime = GetDayTimeFromTimeTable(macAddress, date, "ASC")
+	timeOutput.EndTime = GetDayTimeFromTimeTable(macAddress, date, "DESC")
 
 	err = json.NewEncoder(w).Encode(timeOutput)
 	if err != nil {
