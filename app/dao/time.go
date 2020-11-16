@@ -83,7 +83,7 @@ func GetTimeByPeriod(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	row = Db.QueryRow("SELECT p.id, p.name, p.year, p.begin_at, p.ended_at FROM period p WHERE p.id = $1", period)
+	row = Db.QueryRow("SELECT id, name, year, begin_at, ended_at FROM period WHERE id = $1", period)
 	periodStruct := new(Period)
 	err = row.Scan(&periodStruct.Id, &periodStruct.Name, &periodStruct.Year, &periodStruct.BeginDate, &periodStruct.EndDate)
 	if err != nil {
@@ -104,8 +104,8 @@ func GetTimeByPeriod(w http.ResponseWriter, r *http.Request) {
 		timeStruct := new(Time)
 		timeStruct.Date = curr.Format("2006-01-02")
 		timeStruct.Total = getDayTotalSecondsByUser(macAddress, curr.Format("2006-01-02"))
-		timeStruct.BeginTime = GetDayTime(macAddress, curr.Format("2006-01-02"), "ASC")
-		timeStruct.EndTime = GetDayTime(macAddress, curr.Format("2006-01-02"), "DESC")
+		timeStruct.BeginTime = GetDayTimeFromTimeTable(macAddress, curr.Format("2006-01-02"), "ASC")
+		timeStruct.EndTime = GetDayTimeFromTimeTable(macAddress, curr.Format("2006-01-02"), "DESC")
 		timeStruct.Break = GetAllBreaksByTimes(macAddress, curr.Format("2006-01-02"))
 
 		response.Time = append(response.Time, timeStruct)
