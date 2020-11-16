@@ -50,3 +50,12 @@ func GetUser(userId int64) *User {
 
 	return user
 }
+
+func UpdateUser(user User) {
+	_, err := Db.Exec(
+		"UPDATE users SET name = $1, email = $2, mac_address = $3, telegram_id = $4 WHERE id = $5",
+		user.Name, user.Email, user.MacAddress, user.TelegramId, user.Id)
+	if err != nil {
+		panic(err)
+	}
+}

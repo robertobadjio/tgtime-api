@@ -68,11 +68,17 @@ func GetPeriod(w http.ResponseWriter, r *http.Request) {
 	periodId := mux.Vars(r)["id"]
 
 	var period Period
-	row := Db.QueryRow("SELECT p.name, p.year, p.begin_at, p.ended_at FROM period p WHERE p.id = $1", periodId)
+	row := Db.QueryRow("SELECT p.id, p.name, p.year, p.begin_at, p.ended_at FROM period p WHERE p.id = $1", periodId)
 	err := row.Scan(&period.Id, &period.Name, &period.Year, &period.BeginDate, &period.EndDate)
 	if err != nil {
 		panic(err)
 	}
+
+	// TODO: Костыль 2020-06-01T00:00:00Z -> 2020-06-01
+	timeTemp, _ := time.Parse(time.RFC3339, period.BeginDate)
+	period.BeginDate = timeTemp.Format("2006-01-02")
+	timeTemp, _ = time.Parse(time.RFC3339, period.EndDate)
+	period.EndDate = timeTemp.Format("2006-01-02")
 
 	err = json.NewEncoder(w).Encode(period)
 	if err != nil {
@@ -82,11 +88,25 @@ func GetPeriod(w http.ResponseWriter, r *http.Request) {
 
 func UpdatePeriod(w http.ResponseWriter, r *http.Request) {
 	periodId := mux.Vars(r)["id"]
+	reqBody, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		fmt.Fprintf(w, "Kindly enter data with the mac address and seconds only in order to update")
+	}
 
 	var period Period
-	Db.QueryRow("UPDATE period p SET p.name, p.year, p.begin_at, p.ended_at WHERE p.id = $1", periodId)
+	err = json.Unmarshal(reqBody, &period)
+	if err != nil {
+		panic(err)
+	}
 
-	err := json.NewEncoder(w).Encode(period)
+	_, err = Db.Exec("UPDATE period SET name = $1, year = $2, begin_at = $3, ended_at = $4 WHERE id = $5",
+		period.Name, period.Year, period.BeginDate, period.EndDate, periodId)
+	if err != nil {
+		panic(err)
+	}
+
+	w.WriteHeader(http.StatusOK)
+	err = json.NewEncoder(w).Encode(period)
 	if err != nil {
 		panic(err)
 	}
