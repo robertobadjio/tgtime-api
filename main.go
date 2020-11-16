@@ -63,7 +63,7 @@ func main() {
 
 func every12Day() {
 	t := time.Now()
-	n := time.Date(t.Year(), t.Month(), t.Day(), 12, 0, 0, 0, t.Location())
+	n := time.Date(t.Year(), t.Month(), t.Day(), 0, 1, 0, 0, t.Location())
 	d := n.Sub(t)
 	if d < 0 {
 		n = n.Add(24 * time.Hour)
