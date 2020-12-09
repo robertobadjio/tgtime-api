@@ -10,7 +10,7 @@ import (
 )
 
 func GetAllPeriods(w http.ResponseWriter, r *http.Request) {
-	rows, err := Db.Query("SELECT p.id, p.name, p.year, p.begin_at, p.ended_at FROM period p")
+	rows, err := Db.Query("SELECT p.id, p.name, p.year, p.begin_at, p.ended_at FROM period p WHERE p.deleted = false") // TODO: const
 	if err != nil {
 		panic(err)
 	}
@@ -41,6 +41,7 @@ func GetAllPeriods(w http.ResponseWriter, r *http.Request) {
 }
 
 func CreatePeriod(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	reqBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		fmt.Fprintf(w, "Kindly enter data with the mac address and seconds only in order to update") // TODO: описание
@@ -52,7 +53,10 @@ func CreatePeriod(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	_, err = Db.Exec("INSERT INTO period (name, year, begin_at, ended_at) VALUES ($1, $2, $3, $4)", period.Name, period.Year, period.BeginDate, period.EndDate)
+	moscowLocation, _ := time.LoadLocation("Europe/Moscow")
+	now := time.Now().In(moscowLocation)
+
+	_, err = Db.Exec("INSERT INTO period (name, description, year, begin_at, ended_at, created_at) VALUES ($1, $2, $3, $4, $5, $6)", period.Name, period.Name, period.Year, period.BeginDate, period.EndDate, now.Format("2006-01-02 15:04:05"))
 	if err != nil {
 		panic(err)
 	}
@@ -116,7 +120,7 @@ func DeletePeriod(w http.ResponseWriter, r *http.Request) {
 	periodId := mux.Vars(r)["id"]
 
 	var period Period
-	Db.QueryRow("UPDATE period p SET p.deleted = $1 WHERE p.id = $2", periodId, 1) // TODO: const
+	Db.QueryRow("UPDATE period SET deleted = true WHERE id = $1", periodId) // TODO: const
 
 	err := json.NewEncoder(w).Encode(period)
 	if err != nil {

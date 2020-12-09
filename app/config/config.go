@@ -20,6 +20,7 @@ type appConfig struct {
 	RouterUserName string
 	RouterPassword string
 	WebHookPath string
+	TelegramBot string
 }
 
 func LoadConfig(configPaths ...string) error {

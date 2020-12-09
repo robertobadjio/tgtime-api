@@ -109,7 +109,8 @@ func GetTimeByPeriod(w http.ResponseWriter, r *http.Request) {
 		timeStruct.Total = getDayTotalSecondsByUser(macAddress, curr.Format("2006-01-02"))
 		timeStruct.BeginTime = GetDayTimeFromTimeTable(macAddress, curr.Format("2006-01-02"), "ASC")
 		timeStruct.EndTime = GetDayTimeFromTimeTable(macAddress, curr.Format("2006-01-02"), "DESC")
-		timeStruct.Break = GetAllBreaksByTimes(macAddress, curr.Format("2006-01-02"))
+		times := GetAllByDate(macAddress, curr.Format("2006-01-02"))
+		timeStruct.Break = GetAllBreaksByTimesOld(times)
 
 		response.Time = append(response.Time, timeStruct)
 	}

@@ -57,6 +57,8 @@ func main() {
 	router.HandleFunc("/api-service/user", dao.GetAllUsers).Methods("GET")
 	router.HandleFunc("/api-service/user/{id}", dao.GetUser).Methods("GET")
 	router.HandleFunc("/api-service/user/{id}", dao.UpdateUser).Methods("PATCH")
+	router.HandleFunc("/api-service/user", dao.CreateUser).Methods("POST")
+	router.HandleFunc("/api-service/user/{id}", dao.DeleteUser).Methods("DELETE")
 
 	log.Fatal(http.ListenAndServe(":8080", c.Handler(router)))
 }
