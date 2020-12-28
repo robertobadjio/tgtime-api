@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
+	"golang.org/x/crypto/bcrypt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -95,11 +96,24 @@ func sendEmail(name, email, password string) {
 	// Here we do it all: connect to our server, set up a message and send it
 	to := []string{email}
 	msg := []byte("To: " + email + "\r\n" +
-		"Subject: OfficeTime registration\r\n" +
-		"Для начала работы напишите '/start' телеграм-боту " + config.Config.TelegramBot + "\r\n" +
-		"Hello " + name + "! You password: " + password + "\r\n")
+		"Subject: Регистрация на OfficeTime\r\n" +
+		"Добро пожаловать " + name + "! Ваш пароль: " + password + "\r\n\r\n" +
+		"Для начала работы напишите '/start' телеграм-боту @" + config.Config.TelegramBot)
 	err := smtp.SendMail("smtp.timeweb.ru:25", auth, "info@officetime.tech", to, msg)
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func CheckAuth(email, password string) bool {
+	user := model.GetUserByEmail(email)
+	if user == nil {
+		log.Fatal("User " + email + " not found")
+	}
+
+	userPasswordHash := model.GetUserPasswordHashByEmail(email)
+
+	err := bcrypt.CompareHashAndPassword([]byte(userPasswordHash), []byte(password))
+
+	return err == nil
 }

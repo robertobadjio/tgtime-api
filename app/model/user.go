@@ -16,6 +16,7 @@ type User struct {
 	Email      string `json:"email"`
 	MacAddress string `json:"macAddress"`
 	TelegramId int64  `json:"telegramId"`
+	Role       string `json:"role"`
 }
 
 type Users struct {
@@ -39,7 +40,7 @@ type ErrorDeleteUser struct {
 }
 
 func GetAllUsers() Users {
-	rows, err := Db.Query("SELECT u.id, u.name, u.email, u.mac_address, u.telegram_id FROM users u")
+	rows, err := Db.Query("SELECT u.id, u.name, u.email, u.mac_address, u.telegram_id, u.role FROM users u")
 	if err != nil {
 		panic(err)
 	}
@@ -48,7 +49,7 @@ func GetAllUsers() Users {
 	users := make([]*User, 0)
 	for rows.Next() {
 		user := new(User)
-		err := rows.Scan(&user.Id, &user.Name, &user.Email, &user.MacAddress, &user.TelegramId)
+		err := rows.Scan(&user.Id, &user.Name, &user.Email, &user.MacAddress, &user.TelegramId, &user.Role)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -64,13 +65,35 @@ func GetAllUsers() Users {
 
 func GetUser(userId int64) *User {
 	user := new(User)
-	row := Db.QueryRow("SELECT u.id, u.name, u.email, u.mac_address, u.telegram_id FROM users u WHERE u.id = $1", userId)
-	err := row.Scan(&user.Id, &user.Name, &user.Email, &user.MacAddress, &user.TelegramId)
+	row := Db.QueryRow("SELECT u.id, u.name, u.email, u.mac_address, u.telegram_id, u.role FROM users u WHERE u.id = $1", userId)
+	err := row.Scan(&user.Id, &user.Name, &user.Email, &user.MacAddress, &user.TelegramId, &user.Role)
 	if err != nil {
 		panic(err)
 	}
 
 	return user
+}
+
+func GetUserByEmail(email string) *User {
+	user := new(User)
+	row := Db.QueryRow("SELECT u.id, u.name, u.email, u.mac_address, u.telegram_id, u.role FROM users u WHERE u.email = $1", email)
+	err := row.Scan(&user.Id, &user.Name, &user.Email, &user.MacAddress, &user.TelegramId, &user.Role)
+	if err != nil {
+		panic(err)
+	}
+
+	return user
+}
+
+func GetUserPasswordHashByEmail(email string) string {
+	var passwordHash string
+	row := Db.QueryRow("SELECT u.password FROM users u WHERE u.email = $1", email)
+	err := row.Scan(&passwordHash)
+	if err != nil {
+		panic(err)
+	}
+
+	return passwordHash
 }
 
 func DeleteUser(userId int) error {
@@ -95,7 +118,7 @@ func CreateUser(user User) (string, int, error) {
 	moscowLocation, _ := time.LoadLocation("Europe/Moscow")
 	now := time.Now().In(moscowLocation)
 	password := randomString(10)
-	passwordHash, _ := bcrypt.GenerateFromPassword([]byte(password), 14)
+	passwordHash, _ := bcrypt.GenerateFromPassword([]byte(password), 14) // TODO: в сервис
 	lastInsertId := 0
 	err := Db.QueryRow("INSERT INTO users (name, email, mac_address, telegram_id, password, created_at) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id", user.Name, user.Email, user.MacAddress, user.TelegramId, passwordHash, now.Format("2006-01-02 15:04:05")).Scan(&lastInsertId)
 
