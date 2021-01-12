@@ -51,14 +51,20 @@ func GetTokenHandler(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	if !dao.CheckAuth(data.Email, data.Password) {
-		json.NewEncoder(w).Encode("Invalid user")
+	user, err := model.GetUserByEmail(data.Email)
+	if err != nil {
+		fmt.Fprintf(w, err.Error())
 		return
 	}
+
+	if !dao.CheckAuth(data.Email, data.Password) {
+		fmt.Fprintf(w, "Wrong password")
+		return
+	}
+
 	// Создаем новый токен
 	token := jwt.New(jwt.SigningMethodHS256)
 
-	user := model.GetUserByEmail(data.Email)
 	claims := token.Claims.(jwt.MapClaims)
 	// Устанавливаем набор параметров для токена
 	claims["authorized"] = true
@@ -169,7 +175,7 @@ func main() {
 
 	router.Handle("/api-service/time/{id}/day/{date}", isAuthorized(dao.GetTimeDayAll)).Methods("GET")
 	router.Handle("/api-service/time/{id}/period/{period}", isAuthorized(dao.GetTimeByPeriod)).Methods("GET")
-	router.HandleFunc("/api-service/time", dao.CreateTime).Methods("POST")
+	router.Handle("/api-service/time", isAuthorized(dao.CreateTime)).Methods("POST")
 
 	router.Handle("/api-service/period", isAuthorized(dao.GetAllPeriods)).Methods("GET")
 	router.Handle("/api-service/period/{id}", isAuthorized(dao.GetPeriod)).Methods("GET")

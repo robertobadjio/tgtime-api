@@ -105,12 +105,8 @@ func sendEmail(name, email, password string) {
 	}
 }
 
+// TODO: передать пароль за место email
 func CheckAuth(email, password string) bool {
-	user := model.GetUserByEmail(email)
-	if user == nil {
-		log.Fatal("User " + email + " not found")
-	}
-
 	userPasswordHash := model.GetUserPasswordHashByEmail(email)
 
 	err := bcrypt.CompareHashAndPassword([]byte(userPasswordHash), []byte(password))

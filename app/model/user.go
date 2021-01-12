@@ -39,6 +39,10 @@ type ErrorDeleteUser struct {
 	userId int
 }
 
+type NotFoundUser struct {
+	userEmail string
+}
+
 func GetAllUsers() Users {
 	rows, err := Db.Query("SELECT u.id, u.name, u.email, u.mac_address, u.telegram_id, u.role FROM users u")
 	if err != nil {
@@ -74,15 +78,15 @@ func GetUser(userId int64) *User {
 	return user
 }
 
-func GetUserByEmail(email string) *User {
+func GetUserByEmail(email string) (*User, error) {
 	user := new(User)
 	row := Db.QueryRow("SELECT u.id, u.name, u.email, u.mac_address, u.telegram_id, u.role FROM users u WHERE u.email = $1", email)
 	err := row.Scan(&user.Id, &user.Name, &user.Email, &user.MacAddress, &user.TelegramId, &user.Role)
 	if err != nil {
-		panic(err)
+		return nil, &NotFoundUser{email}
 	}
 
-	return user
+	return user, nil
 }
 
 func GetUserPasswordHashByEmail(email string) string {
@@ -155,6 +159,10 @@ func (e *MacAddressAlreadyExists) Error() string {
 
 func (e *ErrorDeleteUser) Error() string {
 	return fmt.Sprintf("User with id %d not deleted", e.userId)
+}
+
+func (e *NotFoundUser) Error() string {
+	return fmt.Sprintf("User with email %s not found", e.userEmail)
 }
 
 func randomString(n int) string {
