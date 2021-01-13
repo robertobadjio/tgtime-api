@@ -30,6 +30,13 @@ type AccessDetails struct {
 	Role   string
 }
 
+type TokenDetails struct {
+	AccessToken         string `json:"access_token"`
+	RefreshToken        string `json:"refresh_token"`
+	AccessTokenExpires  int64  `json:"access_token_expires"`
+	RefreshTokenExpires int64  `json:"refresh_token_expires"`
+}
+
 func (ad *AccessDetails) isAdmin() bool {
 	return "Admin" == ad.Role // TODO: const
 }
@@ -37,9 +44,14 @@ func (ad *AccessDetails) isAdmin() bool {
 var db *sql.DB
 
 // Global secret key
-var mySigningKey = []byte("vtlcgjgek") // TODO: ключ в конфиг
+var mySigningKey = []byte("vtlcgjgek")     // TODO: ключ в конфиг
+var refreshSecretKey = []byte("vtlcgjgek") // TODO: ключ в конфиг
 
 func GetTokenHandler(w http.ResponseWriter, r *http.Request) {
+	td := &TokenDetails{}
+	td.AccessTokenExpires = time.Now().Add(time.Minute * 5).Unix()    // TODO: время в конфиг
+	td.RefreshTokenExpires = time.Now().Add(time.Hour * 24 * 7).Unix() // TODO: время в конфиг
+
 	reqBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		fmt.Fprintf(w, "Kindly enter data with the mac address and seconds only in order to update")
@@ -62,22 +74,36 @@ func GetTokenHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	json.NewEncoder(w).Encode(CreateTokenPair(user))
+}
+
+func CreateTokenPair(user *model.User) *TokenDetails {
+	td := &TokenDetails{}
+	td.AccessTokenExpires = time.Now().Add(time.Minute * 5).Unix()    // TODO: время в конфиг
+	td.RefreshTokenExpires = time.Now().Add(time.Hour * 24 * 7).Unix() // TODO: время в конфиг
+
 	// Создаем новый токен
 	token := jwt.New(jwt.SigningMethodHS256)
 
-	claims := token.Claims.(jwt.MapClaims)
+	accessTokenClaims := token.Claims.(jwt.MapClaims)
 	// Устанавливаем набор параметров для токена
-	claims["authorized"] = true
-	claims["userId"] = user.Id
-	claims["userName"] = user.Name
-	claims["exp"] = time.Now().Add(time.Minute * 5).Unix() // TODO: время в конфиг
-	claims["role"] = user.Role // TODO: костыль RBAC?
+	accessTokenClaims["authorized"] = true
+	accessTokenClaims["userId"] = user.Id
+	accessTokenClaims["userName"] = user.Name
+	accessTokenClaims["exp"] = td.AccessTokenExpires
+	accessTokenClaims["role"] = user.Role // TODO: костыль, RBAC?
 
 	// Подписываем токен нашим секретным ключем
-	tokenString, _ := token.SignedString(mySigningKey)
+	td.AccessToken, _ = token.SignedString(mySigningKey) // TODO: обработка ошибки
 
-	// Отдаем токен клиенту
-	w.Write([]byte(tokenString))
+	// Creating Refresh Token
+	refreshTokenClaims := jwt.MapClaims{}
+	refreshTokenClaims["userId"] = user.Id
+	refreshTokenClaims["exp"] = td.RefreshTokenExpires
+	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshTokenClaims)
+	td.RefreshToken, _ = refreshToken.SignedString(refreshSecretKey) // TODO: обработка ошибки
+
+	return td
 }
 
 func Logout(w http.ResponseWriter, r *http.Request) {
@@ -107,7 +133,7 @@ func ExtractTokenMetadata(r *http.Request) (*AccessDetails, error) {
 		role := fmt.Sprintf("%s", claims["role"])
 		return &AccessDetails{
 			UserId: userId,
-			Role: role,
+			Role:   role,
 		}, nil
 	}
 	return nil, err
@@ -143,6 +169,62 @@ func ExtractToken(r *http.Request) string {
 	return ""
 }
 
+type RefreshToken struct {
+	Token string `json:"refresh_token"`
+}
+
+func Refresh(w http.ResponseWriter, r *http.Request) {
+	reqBody, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		panic(err)
+	}
+
+	var refreshToken RefreshToken
+	err = json.Unmarshal(reqBody, &refreshToken)
+	if err != nil {
+		panic(err)
+	}
+
+	// Verify the token
+	token, err := jwt.Parse(refreshToken.Token, func(token *jwt.Token) (interface{}, error) {
+		// Make sure that the token method conform to "SigningMethodHMAC"
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return refreshSecretKey, nil
+	})
+
+	w.Header().Set("Content-Type", "application/json")
+	// If there is an error, the token must have expired
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized) // "Refresh token expired"
+		return
+	}
+
+	// Is token valid?
+	if _, ok := token.Claims.(jwt.Claims); !ok && !token.Valid {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	// Since token is valid, get the uuid:
+	claims, ok := token.Claims.(jwt.MapClaims) //the token claims should conform to MapClaims
+	if ok && token.Valid {
+		userId, err := strconv.ParseInt(fmt.Sprintf("%.f", claims["userId"]), 10, 64)
+		if err != nil {
+			w.WriteHeader(http.StatusUnprocessableEntity) // TODO: вернуть "Error occurred"
+			fmt.Println("Error occurred")
+			//w.Write([]byte("Error occurred"))
+			return
+		}
+
+		user := model.GetUser(userId)
+		// Create new pairs of refresh and access tokens
+
+		json.NewEncoder(w).Encode(CreateTokenPair(user)) // TODO: обработка ошибки, если пользователь не найден
+	}
+}
+
 func main() {
 	var configPath string
 	flag.StringVar(&configPath, "config", "", "The config name param")
@@ -171,6 +253,7 @@ func main() {
 	router := mux.NewRouter().StrictSlash(true)
 
 	router.HandleFunc("/api-service/login", GetTokenHandler).Methods("POST")
+	router.HandleFunc("/api-service/token/refresh", Refresh).Methods("POST")
 	router.HandleFunc("/api-service/logout", Logout).Methods("POST")
 
 	router.Handle("/api-service/time/{id}/day/{date}", isAuthorized(dao.GetTimeDayAll)).Methods("GET")
