@@ -49,7 +49,7 @@ var refreshSecretKey = []byte("vtlcgjgek") // TODO: ключ в конфиг
 
 func GetTokenHandler(w http.ResponseWriter, r *http.Request) {
 	td := &TokenDetails{}
-	td.AccessTokenExpires = time.Now().Add(time.Minute * 5).Unix()    // TODO: время в конфиг
+	td.AccessTokenExpires = time.Now().Add(time.Minute * 1).Unix()    // TODO: время в конфиг
 	td.RefreshTokenExpires = time.Now().Add(time.Hour * 24 * 7).Unix() // TODO: время в конфиг
 
 	reqBody, err := ioutil.ReadAll(r.Body)
@@ -323,16 +323,26 @@ func isAuthorized(endpoint func(http.ResponseWriter, *http.Request)) http.Handle
 			})
 
 			if err != nil {
+				if "Token is expired" == err.Error() {
+					w.WriteHeader(http.StatusUnauthorized)
+				}
 				fmt.Fprintf(w, err.Error())
+				return
 			}
 
 			au, err := ExtractTokenMetadata(r)
 			if err != nil {
+				if "Token is expired" == err.Error() {
+					w.WriteHeader(http.StatusUnauthorized)
+				}
 				fmt.Fprintf(w, err.Error())
 				return
 			}
 			if au == nil {
 				fmt.Fprintf(w, err.Error())
+				if "Token is expired" == err.Error() {
+					w.WriteHeader(http.StatusUnauthorized)
+				}
 				return
 			}
 
@@ -349,6 +359,7 @@ func isAuthorized(endpoint func(http.ResponseWriter, *http.Request)) http.Handle
 				endpoint(w, r)
 			}
 		} else {
+			w.WriteHeader(http.StatusUnauthorized)
 			fmt.Fprintf(w, "Not Authorized")
 		}
 	})
