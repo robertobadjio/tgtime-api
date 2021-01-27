@@ -18,6 +18,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 type authData struct {
@@ -255,6 +256,8 @@ func main() {
 	router.HandleFunc("/api-service/login", GetTokenHandler).Methods("POST")
 	router.HandleFunc("/api-service/token/refresh", Refresh).Methods("POST")
 	router.HandleFunc("/api-service/logout", Logout).Methods("POST")
+
+	router.Handle("/metrics", promhttp.Handler())
 
 	router.Handle("/api-service/time/{id}/day/{date}", isAuthorized(dao.GetTimeDayAll)).Methods("GET")
 	router.Handle("/api-service/time/{id}/period/{period}", isAuthorized(dao.GetTimeByPeriod)).Methods("GET")
