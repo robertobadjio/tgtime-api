@@ -43,8 +43,16 @@ type NotFoundUser struct {
 	userEmail string
 }
 
-func GetAllUsers() Users {
-	rows, err := Db.Query("SELECT u.id, u.name, u.email, u.mac_address, u.telegram_id, u.role FROM users u")
+func GetAllUsers(offset, limit int) Users {
+	var args []interface{}
+	statusQuery := ""
+	if offset != 0 && limit != 0 {
+		statusQuery = " LIMIT $1 OFFSET $2"
+		args = append(args, limit)
+		args = append(args, offset)
+	}
+
+	rows, err := Db.Query("SELECT u.id, u.name, u.email, u.mac_address, u.telegram_id, u.role FROM users u ORDER BY u.name ASC" + statusQuery, args...)
 	if err != nil {
 		panic(err)
 	}

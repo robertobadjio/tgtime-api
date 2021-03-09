@@ -8,7 +8,7 @@ import (
 type Department struct {
 	Id          int    `json:"id"`
 	Name        string `json:"name"`
-	Description string `json:"email"`
+	Description string `json:"description"`
 }
 
 type ErrorDeleteDepartment struct {
@@ -20,7 +20,7 @@ type ErrorUpdateDepartment struct {
 }
 
 func GetAllDepartments() []*Department {
-	rows, err := Db.Query("SELECT id, name, discription FROM department")
+	rows, err := Db.Query("SELECT id, name, description FROM department")
 	if err != nil {
 		panic(err)
 	}

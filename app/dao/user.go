@@ -15,7 +15,11 @@ import (
 )
 
 func GetAllUsers(w http.ResponseWriter, r *http.Request) {
-	json.NewEncoder(w).Encode(model.GetAllUsers())
+	offset, _ := strconv.Atoi(r.URL.Query().Get("offset"))
+	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(model.GetAllUsers(offset, limit))
 }
 
 func GetUser(w http.ResponseWriter, r *http.Request) {
@@ -91,6 +95,7 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func sendEmail(name, email, password string) {
+	// TODO: В параметры
 	auth := smtp.PlainAuth("", "info@officetime.tech", "E61kTuq7", "smtp.timeweb.ru")
 
 	// Here we do it all: connect to our server, set up a message and send it

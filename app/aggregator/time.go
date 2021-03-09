@@ -14,7 +14,7 @@ func AggregateTime() {
 	moscowLocation, _ := time.LoadLocation("Europe/Moscow")
 	date := time.Now().AddDate(0, 0, -1).In(moscowLocation).Format("2006-01-02")
 
-	for _, user := range model.GetAllUsers().Users {
+	for _, user := range model.GetAllUsers(0, 0).Users {
 		times := dao.GetAllByDate(user.MacAddress, date)
 		seconds := dao.AggregateDayTotalTime(times)
 		breaks := dao.GetAllBreaksByTimesOld(times)
