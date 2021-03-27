@@ -15,6 +15,11 @@ func GetAllDepartments(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(model.GetAllDepartments())
 }
 
+func GetDepartment(w http.ResponseWriter, r *http.Request) {
+	departmentId, _ := strconv.Atoi(mux.Vars(r)["id"])
+	json.NewEncoder(w).Encode(model.GetDepartment(departmentId))
+}
+
 func DeleteDepartment(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 	userId, _ := strconv.Atoi(id)

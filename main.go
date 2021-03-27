@@ -275,6 +275,7 @@ func main() {
 	router.Handle("/api-service/user", isAuthorized(dao.CreateUser)).Methods("POST")
 	router.Handle("/api-service/user/{id}", isAuthorized(dao.DeleteUser)).Methods("DELETE")
 
+	router.Handle("/api-service/department/{id}", isAuthorized(dao.GetDepartment)).Methods("GET")
 	router.Handle("/api-service/department", isAuthorized(dao.GetAllDepartments)).Methods("GET")
 	router.Handle("/api-service/department", isAuthorized(dao.CreateDepartment)).Methods("POST")
 	router.Handle("/api-service/department/{id}", isAuthorized(dao.UpdateDepartment)).Methods("PATCH")

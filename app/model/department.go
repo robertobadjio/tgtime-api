@@ -40,6 +40,17 @@ func GetAllDepartments() []*Department {
 	return departments
 }
 
+func GetDepartment(departmentId int) Department {
+	var department Department
+	row := Db.QueryRow("SELECT d.id, d.name, d.description FROM department d WHERE d.id = $1", departmentId)
+	err := row.Scan(&department.Id, &department.Name, &department.Description)
+	if err != nil {
+		panic(err)
+	}
+
+	return department
+}
+
 func UpdateDepartment(department Department) error {
 	_, err := Db.Exec(
 		"UPDATE department SET name = $1, description = $2  WHERE id = $3",
