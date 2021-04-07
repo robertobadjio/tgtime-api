@@ -13,10 +13,13 @@ import (
 type User struct {
 	Id         int    `json:"id"`
 	Name       string `json:"name"`
+	Surname    string `json:"surname"`
+	Lastname   string `json:"lastname"`
 	Email      string `json:"email"`
 	MacAddress string `json:"macAddress"`
 	TelegramId int64  `json:"telegramId"`
 	Role       string `json:"role"`
+	Department int64  `json:"department"`
 }
 
 type Users struct {
@@ -52,7 +55,7 @@ func GetAllUsers(offset, limit int) Users {
 		args = append(args, offset)
 	}
 
-	rows, err := Db.Query("SELECT u.id, u.name, u.email, u.mac_address, u.telegram_id, u.role FROM users u ORDER BY u.name ASC" + statusQuery, args...)
+	rows, err := Db.Query("SELECT u.id, u.name, u.email, u.mac_address, u.telegram_id, u.role FROM users u ORDER BY u.name ASC"+statusQuery, args...)
 	if err != nil {
 		panic(err)
 	}
@@ -132,7 +135,7 @@ func CreateUser(user User) (string, int, error) {
 	password := randomString(10)
 	passwordHash, _ := bcrypt.GenerateFromPassword([]byte(password), 14) // TODO: в сервис
 	lastInsertId := 0
-	err := Db.QueryRow("INSERT INTO users (name, email, mac_address, telegram_id, password, created_at) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id", user.Name, user.Email, user.MacAddress, user.TelegramId, passwordHash, now.Format("2006-01-02 15:04:05")).Scan(&lastInsertId)
+	err := Db.QueryRow("INSERT INTO users (name, email, mac_address, telegram_id, password, created_at, surname, lastname, department_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id", user.Name, user.Email, user.MacAddress, user.TelegramId, passwordHash, now.Format("2006-01-02 15:04:05"), user.Surname, user.Lastname, user.Department).Scan(&lastInsertId)
 
 	if pgerr, ok := err.(*pq.Error); ok {
 		if pgerr.Code == "23505" {

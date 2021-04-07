@@ -281,6 +281,12 @@ func main() {
 	router.Handle("/api-service/department/{id}", isAuthorized(dao.UpdateDepartment)).Methods("PATCH")
 	router.Handle("/api-service/department/{id}", isAuthorized(dao.DeleteDepartment)).Methods("DELETE")
 
+	//router.Handle("/api-service/router/{id}", isAuthorized(dao.GetRouter)).Methods("GET")
+	router.Handle("/api-service/router", isAuthorized(dao.GetAllRouters)).Methods("GET")
+	//router.Handle("/api-service/router", isAuthorized(dao.CreateRouter)).Methods("POST")
+	//router.Handle("/api-service/router/{id}", isAuthorized(dao.UpdateRouter)).Methods("PATCH")
+	//router.Handle("/api-service/router/{id}", isAuthorized(dao.DeleteRouter)).Methods("DELETE")
+
 	log.Fatal(http.ListenAndServe(":8080", c.Handler(router)))
 }
 

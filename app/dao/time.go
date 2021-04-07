@@ -8,6 +8,7 @@ import (
 	_ "github.com/lib/pq"
 	"io/ioutil"
 	"net/http"
+	"officetime-api/app/model"
 	"strconv"
 	"time"
 )
@@ -15,6 +16,7 @@ import (
 type TimeUser struct {
 	MacAddress string
 	Second     int64
+	RouterId   int8
 }
 
 type Period struct {
@@ -34,17 +36,24 @@ type Break struct {
 	EndTime   int64 `json:"endTime"`
 }
 
+type RouterResponse struct {
+	Name        string `json:"name"`
+	Total       int64  `json:"total"`
+	Description string `json:"description"`
+}
+
 type PeriodUser struct {
 	Period int     `json:"period"`
 	Time   []*Time `json:"time"`
 }
 
 type Time struct {
-	Date      string   `json:"date"`
-	Total     int64    `json:"total"`
-	BeginTime int64    `json:"beginTime"`
-	EndTime   int64    `json:"endTime"`
-	Break     []*Break `json:"breaks"`
+	Date      string           `json:"date"`
+	Total     int64            `json:"total"`
+	BeginTime int64            `json:"beginTime"`
+	EndTime   int64            `json:"endTime"`
+	Break     []*Break         `json:"breaks"`
+	Routers   []RouterResponse `json:"routers"`
 }
 
 var Db *sql.DB
@@ -62,10 +71,10 @@ func GetTimeDayAll(w http.ResponseWriter, r *http.Request) {
 	}
 	var timeOutput Time
 	timeOutput.Date = date
-	timeOutput.Total = getDayTotalSecondsByUser(macAddress, date)
+	timeOutput.Total = getDayTotalSecondsByUser(macAddress, date, 0)
 	timeOutput.BeginTime = GetDayTimeFromTimeTable(macAddress, date, "ASC")
 	timeOutput.EndTime = GetDayTimeFromTimeTable(macAddress, date, "DESC")
-	times := GetAllByDate(macAddress, date)
+	times := GetAllByDate(macAddress, date, 0)
 	timeOutput.Break = GetAllBreaksByTimesOld(times)
 
 	err = json.NewEncoder(w).Encode(timeOutput)
@@ -103,14 +112,31 @@ func GetTimeByPeriod(w http.ResponseWriter, r *http.Request) {
 		end = now
 	}
 
+	routers := model.GetAllRouters()
+
 	for curr := begin; curr.Before(end); curr = curr.AddDate(0, 0, 1) {
 		timeStruct := new(Time)
 		timeStruct.Date = curr.Format("2006-01-02")
-		timeStruct.Total = getDayTotalSecondsByUser(macAddress, curr.Format("2006-01-02"))
+		timeStruct.Total = getDayTotalSecondsByUser(macAddress, curr.Format("2006-01-02"), 0)
 		timeStruct.BeginTime = GetDayTimeFromTimeTable(macAddress, curr.Format("2006-01-02"), "ASC")
 		timeStruct.EndTime = GetDayTimeFromTimeTable(macAddress, curr.Format("2006-01-02"), "DESC")
-		times := GetAllByDate(macAddress, curr.Format("2006-01-02"))
+		times := GetAllByDate(macAddress, curr.Format("2006-01-02"), 0)
 		timeStruct.Break = GetAllBreaksByTimesOld(times)
+
+		// Собираем routers
+		for _, router := range routers {
+			if router.WorkTime {
+				continue
+			}
+			var responseRouters []RouterResponse
+			var responseRouter RouterResponse
+			responseRouter.Total = getDayTotalSecondsByUser(macAddress, curr.Format("2006-01-02"), router.Id)
+			responseRouter.Name = router.Name
+			responseRouter.Description = router.Description
+			responseRouters = append(responseRouters, responseRouter)
+			timeStruct.Routers = responseRouters
+			timeStruct.Total -= responseRouter.Total
+		}
 
 		response.Time = append(response.Time, timeStruct)
 	}
@@ -121,7 +147,7 @@ func GetTimeByPeriod(w http.ResponseWriter, r *http.Request) {
 func CreateTime(w http.ResponseWriter, r *http.Request) {
 	reqBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		fmt.Fprintf(w, "Kindly enter data with the mac address and seconds only in order to update")
+		fmt.Fprintf(w, "Kindly enter data with the mac address and seconds only in order to update") // TODO: Описание
 	}
 
 	var timeUser TimeUser
@@ -130,7 +156,7 @@ func CreateTime(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	_, err = Db.Exec("INSERT INTO time (mac_address, second) VALUES ($1, $2)", timeUser.MacAddress, timeUser.Second)
+	_, err = Db.Exec("INSERT INTO time (mac_address, second, router_id) VALUES ($1, $2, $3)", timeUser.MacAddress, timeUser.Second, timeUser.RouterId)
 	if err != nil {
 		panic(err)
 	}
@@ -146,7 +172,7 @@ func GetAllBreaksByTimes(macAddress, date string) []*Break {
 	var breaksJson string
 	row := Db.QueryRow("SELECT ts.breaks FROM time_summary ts WHERE ts.mac_address = $1 AND ts.date = $2", macAddress, date)
 	err := row.Scan(&breaksJson)
-	var s []*Break // TODO: переименовать переменную
+	var s []*Break // TODO: Переименовать переменную
 	if err == sql.ErrNoRows {
 		return s
 	}
@@ -259,13 +285,13 @@ func GetDayTimeFromTimeTable(macAddress string, date string, sort string) int64 
 	return beginSecond
 }
 
-func getDayTotalSecondsByUser(macAddress, date string) int64 {
+func getDayTotalSecondsByUser(macAddress, date string, routerId int) int64 {
 	var seconds int64
 
 	dateToday, _ := time.Parse("2006-01-02", date)
 	now := time.Now()
 	if dateToday.Year() == now.Year() && dateToday.Month() == now.Month() && dateToday.Day() == now.Day() {
-		times := GetAllByDate(macAddress, date)
+		times := GetAllByDate(macAddress, date, routerId)
 		return AggregateDayTotalTime(times)
 	}
 
@@ -281,8 +307,19 @@ func getDayTotalSecondsByUser(macAddress, date string) int64 {
 	return seconds
 }
 
-func GetAllByDate(macAddress string, date string) []*TimeUser {
-	rows, err := Db.Query("SELECT t.mac_address, t.second FROM time t WHERE t.mac_address = $1 AND t.second BETWEEN $2 AND $3 ORDER BY t.second", macAddress, GetSecondsByBeginDate(date), GetSecondsByEndDate(date))
+func GetAllByDate(macAddress string, date string, routerId int) []*TimeUser {
+	var args []interface{}
+	args = append(args, macAddress)
+	args = append(args, GetSecondsByBeginDate(date))
+	args = append(args, GetSecondsByEndDate(date))
+
+	var routerQuery string
+	if routerId != 0 {
+		routerQuery = " AND t.router_id = $4"
+		args = append(args, routerId)
+	}
+
+	rows, err := Db.Query("SELECT t.mac_address, t.second FROM time t WHERE t.mac_address = $1 AND t.second BETWEEN $2 AND $3"+routerQuery+" ORDER BY t.second", args...)
 	if err != nil {
 		panic(err)
 	}
