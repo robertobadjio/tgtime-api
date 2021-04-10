@@ -15,6 +15,7 @@ type User struct {
 	Name       string `json:"name"`
 	Surname    string `json:"surname"`
 	Lastname   string `json:"lastname"`
+	BirthDate  string `json:"birthDate"`
 	Email      string `json:"email"`
 	MacAddress string `json:"macAddress"`
 	TelegramId int64  `json:"telegramId"`
@@ -91,8 +92,8 @@ func GetUser(userId int64) *User {
 
 func GetUserByEmail(email string) (*User, error) {
 	user := new(User)
-	row := Db.QueryRow("SELECT u.id, u.name, u.email, u.mac_address, u.telegram_id, u.role FROM users u WHERE u.email = $1", email)
-	err := row.Scan(&user.Id, &user.Name, &user.Email, &user.MacAddress, &user.TelegramId, &user.Role)
+	row := Db.QueryRow("SELECT u.id, u.name, u.email, u.mac_address, u.telegram_id, u.role, u.surname, u.lastname, u.birth_date FROM users u WHERE u.email = $1", email)
+	err := row.Scan(&user.Id, &user.Name, &user.Email, &user.MacAddress, &user.TelegramId, &user.Role, &user.Surname, &user.Lastname, &user.BirthDate)
 	if err != nil {
 		return nil, &NotFoundUser{email}
 	}

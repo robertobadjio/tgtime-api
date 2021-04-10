@@ -7,6 +7,7 @@ import (
 	"fmt"
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/cors"
 	"io/ioutil"
 	"log"
@@ -18,7 +19,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 type authData struct {
@@ -90,7 +90,11 @@ func CreateTokenPair(user *model.User) *TokenDetails {
 	// Устанавливаем набор параметров для токена
 	accessTokenClaims["authorized"] = true
 	accessTokenClaims["userId"] = user.Id
-	accessTokenClaims["userName"] = user.Name
+	accessTokenClaims["userFirstname"] = user.Name
+	accessTokenClaims["userSurname"] = user.Surname
+	accessTokenClaims["userLastname"] = user.Lastname
+	accessTokenClaims["userEmail"] = user.Email
+	accessTokenClaims["userBirthDate"] = user.BirthDate
 	accessTokenClaims["exp"] = td.AccessTokenExpires
 	accessTokenClaims["role"] = user.Role // TODO: костыль, RBAC?
 
