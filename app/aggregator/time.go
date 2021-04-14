@@ -16,7 +16,7 @@ func AggregateTime() {
 
 	for _, user := range model.GetAllUsers(0, 0).Users {
 		times := dao.GetAllByDate(user.MacAddress, date, 0)
-		seconds := dao.AggregateDayTotalTime(times)
+		seconds := model.AggregateDayTotalTime(times)
 		breaks := dao.GetAllBreaksByTimesOld(times)
 		breaksJson, err := json.Marshal(breaks)
 		begin := dao.GetDayTimeFromTimeTable(user.MacAddress, date, "ASC")

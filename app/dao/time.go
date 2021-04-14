@@ -13,24 +13,6 @@ import (
 	"time"
 )
 
-type TimeUser struct {
-	MacAddress string
-	Second     int64
-	RouterId   int8
-}
-
-type Period struct {
-	Id        int    `json:"id"`
-	Name      string `json:"name"`
-	Year      int    `json:"year"`
-	BeginDate string `json:"beginDate"`
-	EndDate   string `json:"endDate"`
-}
-
-type Periods struct {
-	Periods []*Period `json:"periods"`
-}
-
 type Break struct {
 	BeginTime int64 `json:"beginTime"`
 	EndTime   int64 `json:"endTime"`
@@ -83,6 +65,7 @@ func GetTimeDayAll(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// TODO: перенести в model.GetTimeByPeriod()
 func GetTimeByPeriod(w http.ResponseWriter, r *http.Request) {
 	userId := mux.Vars(r)["id"]
 	period := mux.Vars(r)["period"]
@@ -96,7 +79,7 @@ func GetTimeByPeriod(w http.ResponseWriter, r *http.Request) {
 	}
 
 	row = Db.QueryRow("SELECT id, name, year, begin_at, ended_at FROM period WHERE id = $1", period)
-	periodStruct := new(Period)
+	periodStruct := new(model.Period)
 	err = row.Scan(&periodStruct.Id, &periodStruct.Name, &periodStruct.Year, &periodStruct.BeginDate, &periodStruct.EndDate)
 	if err != nil {
 		panic(err)
@@ -150,7 +133,7 @@ func CreateTime(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Kindly enter data with the mac address and seconds only in order to update") // TODO: Описание
 	}
 
-	var timeUser TimeUser
+	var timeUser model.TimeUser
 	err = json.Unmarshal(reqBody, &timeUser)
 	if err != nil {
 		panic(err)
@@ -187,7 +170,7 @@ func GetAllBreaksByTimes(macAddress, date string) []*Break {
 	return s
 }
 
-func GetAllBreaksByTimesOld(times []*TimeUser) []*Break {
+func GetAllBreaksByTimesOld(times []*model.TimeUser) []*Break {
 	breaks := make([]*Break, 0)
 	for i, time := range times {
 		if i == 0 {
@@ -209,40 +192,6 @@ func GetAllBreaksByTimesOld(times []*TimeUser) []*Break {
 	}
 
 	return breaks
-}
-
-func AggregateDayTotalTime(times []*TimeUser) int64 {
-	num := 1
-	for i, time := range times {
-		if i == 0 {
-			continue
-		}
-
-		delta := time.Second - times[i-1].Second
-		if delta <= 33 { // TODO: в параметры
-			num++
-		}
-	}
-
-	if 1 == num {
-		return 0
-	}
-
-	return int64(num * 30) // TODO: в параметры
-}
-
-func GetSecondsByBeginDate(date string) int64 {
-	moscowLocation, _ := time.LoadLocation("Europe/Moscow")
-	t, _ := time.ParseInLocation("2006-01-02", date, moscowLocation)
-
-	return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, moscowLocation).Unix()
-}
-
-func GetSecondsByEndDate(date string) int64 {
-	moscowLocation, _ := time.LoadLocation("Europe/Moscow")
-	t, _ := time.ParseInLocation("2006-01-02", date, moscowLocation)
-
-	return time.Date(t.Year(), t.Month(), t.Day(), 23, 59, 59, 0, t.Location()).Unix()
 }
 
 func GetDayTime(macAddress string, date string, sort string) int64 {
@@ -271,7 +220,7 @@ func GetDayTime(macAddress string, date string, sort string) int64 {
 
 func GetDayTimeFromTimeTable(macAddress string, date string, sort string) int64 {
 	var beginSecond int64
-	row := Db.QueryRow("SELECT t.second FROM time t WHERE t.mac_address = $1 AND t.second BETWEEN $2 AND $3 ORDER BY t.second "+sort+" LIMIT 1", macAddress, GetSecondsByBeginDate(date), GetSecondsByEndDate(date))
+	row := Db.QueryRow("SELECT t.second FROM time t WHERE t.mac_address = $1 AND t.second BETWEEN $2 AND $3 ORDER BY t.second "+sort+" LIMIT 1", macAddress, model.GetSecondsByBeginDate(date), model.GetSecondsByEndDate(date))
 	err := row.Scan(&beginSecond)
 
 	if err == sql.ErrNoRows {
@@ -292,7 +241,7 @@ func getDayTotalSecondsByUser(macAddress, date string, routerId int) int64 {
 	now := time.Now()
 	if dateToday.Year() == now.Year() && dateToday.Month() == now.Month() && dateToday.Day() == now.Day() {
 		times := GetAllByDate(macAddress, date, routerId)
-		return AggregateDayTotalTime(times)
+		return model.AggregateDayTotalTime(times)
 	}
 
 	row := Db.QueryRow("SELECT ts.seconds FROM time_summary ts WHERE ts.mac_address = $1 AND ts.date = $2", macAddress, date)
@@ -307,11 +256,11 @@ func getDayTotalSecondsByUser(macAddress, date string, routerId int) int64 {
 	return seconds
 }
 
-func GetAllByDate(macAddress string, date string, routerId int) []*TimeUser {
+func GetAllByDate(macAddress string, date string, routerId int) []*model.TimeUser {
 	var args []interface{}
 	args = append(args, macAddress)
-	args = append(args, GetSecondsByBeginDate(date))
-	args = append(args, GetSecondsByEndDate(date))
+	args = append(args, model.GetSecondsByBeginDate(date))
+	args = append(args, model.GetSecondsByEndDate(date))
 
 	var routerQuery string
 	if routerId != 0 {
@@ -325,9 +274,9 @@ func GetAllByDate(macAddress string, date string, routerId int) []*TimeUser {
 	}
 	defer rows.Close()
 
-	times := make([]*TimeUser, 0)
+	times := make([]*model.TimeUser, 0)
 	for rows.Next() {
-		time := new(TimeUser)
+		time := new(model.TimeUser)
 		err := rows.Scan(&time.MacAddress, &time.Second)
 		if err != nil {
 			panic(err)

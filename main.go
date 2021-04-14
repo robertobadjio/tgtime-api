@@ -50,7 +50,7 @@ var refreshSecretKey = []byte("vtlcgjgek") // TODO: ключ в конфиг
 
 func GetTokenHandler(w http.ResponseWriter, r *http.Request) {
 	td := &TokenDetails{}
-	td.AccessTokenExpires = time.Now().Add(time.Minute * 1).Unix()    // TODO: время в конфиг
+	td.AccessTokenExpires = time.Now().Add(time.Minute * 30).Unix()    // TODO: время в конфиг
 	td.RefreshTokenExpires = time.Now().Add(time.Hour * 24 * 7).Unix() // TODO: время в конфиг
 
 	reqBody, err := ioutil.ReadAll(r.Body)
@@ -256,6 +256,7 @@ func main() {
 	})
 
 	router := mux.NewRouter().StrictSlash(true)
+	router.Use(commonMiddleware)
 
 	router.HandleFunc("/api-service/login", GetTokenHandler).Methods("POST")
 	router.HandleFunc("/api-service/token/refresh", Refresh).Methods("POST")
@@ -285,13 +286,22 @@ func main() {
 	router.Handle("/api-service/department/{id}", isAuthorized(dao.UpdateDepartment)).Methods("PATCH")
 	router.Handle("/api-service/department/{id}", isAuthorized(dao.DeleteDepartment)).Methods("DELETE")
 
-	//router.Handle("/api-service/router/{id}", isAuthorized(dao.GetRouter)).Methods("GET")
+	router.Handle("/api-service/router/{id}", isAuthorized(dao.GetRouter)).Methods("GET")
 	router.Handle("/api-service/router", isAuthorized(dao.GetAllRouters)).Methods("GET")
-	//router.Handle("/api-service/router", isAuthorized(dao.CreateRouter)).Methods("POST")
-	//router.Handle("/api-service/router/{id}", isAuthorized(dao.UpdateRouter)).Methods("PATCH")
-	//router.Handle("/api-service/router/{id}", isAuthorized(dao.DeleteRouter)).Methods("DELETE")
+	router.Handle("/api-service/router", isAuthorized(dao.CreateRouter)).Methods("POST")
+	router.Handle("/api-service/router/{id}", isAuthorized(dao.UpdateRouter)).Methods("PATCH")
+	router.Handle("/api-service/router/{id}", isAuthorized(dao.DeleteRouter)).Methods("DELETE")
+
+	router.Handle("/api-service/stat/period-and-routers", isAuthorized(dao.GetStatByPeriodsAndRouters)).Methods("GET")
 
 	log.Fatal(http.ListenAndServe(":8080", c.Handler(router)))
+}
+
+func commonMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Content-Type", "application/json")
+		next.ServeHTTP(w, r)
+	})
 }
 
 func every12Day() {

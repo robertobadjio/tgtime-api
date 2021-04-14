@@ -18,7 +18,6 @@ func GetAllUsers(w http.ResponseWriter, r *http.Request) {
 	offset, _ := strconv.Atoi(r.URL.Query().Get("offset"))
 	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
 
-	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(model.GetAllUsers(offset, limit))
 }
 
@@ -50,7 +49,6 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func CreateUser(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
 	reqBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		fmt.Fprintf(w, "Kindly enter data with the mac address and seconds only in order to update") // TODO: описание
