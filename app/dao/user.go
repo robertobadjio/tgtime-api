@@ -24,7 +24,8 @@ func GetAllUsers(w http.ResponseWriter, r *http.Request) {
 func GetUser(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 	userId, _ := strconv.Atoi(id)
-	json.NewEncoder(w).Encode(model.GetUser(int64(userId)))
+	user, _ := model.GetUser(int64(userId))
+	json.NewEncoder(w).Encode(user)
 }
 
 func UpdateUser(w http.ResponseWriter, r *http.Request) {

@@ -37,6 +37,7 @@ func UpdateDepartment(w http.ResponseWriter, r *http.Request) {
 	reqBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		fmt.Fprintf(w, "Kindly enter data with the mac address and seconds only in order to update")
+		return
 	}
 
 	var department model.Department

@@ -97,6 +97,8 @@ func CreateTokenPair(user *model.User) *TokenDetails {
 	accessTokenClaims["userBirthDate"] = user.BirthDate
 	accessTokenClaims["exp"] = td.AccessTokenExpires
 	accessTokenClaims["role"] = user.Role // TODO: костыль, RBAC?
+	accessTokenClaims["department"] = user.Department
+	accessTokenClaims["position"] = user.Position
 
 	// Подписываем токен нашим секретным ключем
 	td.AccessToken, _ = token.SignedString(mySigningKey) // TODO: обработка ошибки
@@ -223,7 +225,7 @@ func Refresh(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		user := model.GetUser(userId)
+		user, _ := model.GetUser(userId)
 		// Create new pairs of refresh and access tokens
 
 		json.NewEncoder(w).Encode(CreateTokenPair(user)) // TODO: обработка ошибки, если пользователь не найден
@@ -292,7 +294,8 @@ func main() {
 	router.Handle("/api-service/router/{id}", isAuthorized(dao.UpdateRouter)).Methods("PATCH")
 	router.Handle("/api-service/router/{id}", isAuthorized(dao.DeleteRouter)).Methods("DELETE")
 
-	router.Handle("/api-service/stat/period-and-routers", isAuthorized(dao.GetStatByPeriodsAndRouters)).Methods("GET")
+	router.Handle("/api-service/stat/periods-and-routers", isAuthorized(dao.GetStatByPeriodsAndRouters)).Methods("GET")
+	router.Handle("/api-service/stat/departments/{date}", isAuthorized(dao.GetAllTimesDepartmentsByDate)).Methods("GET")
 
 	log.Fatal(http.ListenAndServe(":8080", c.Handler(router)))
 }

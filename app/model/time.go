@@ -1,6 +1,6 @@
 package model
 
-import (
+import 	(
 	"database/sql"
 	"log"
 	"time"
@@ -25,13 +25,28 @@ type StatByPeriodsAndRouters struct {
 }
 
 type StatRouter struct {
-	Id int `json:"routerId"`
-	Name string `json:"routerName"`
-	Periods []map[string]interface{} `json:"periods"`
+	Id           int                      `json:"routerId"`
+	Name         string                   `json:"routerName"`
+	NumEmployees int                      `json:"numEmployees"`
+	Periods      []map[string]interface{} `json:"periods"`
 }
 
+type StatDepartments struct {
+	Departments []*StatDepartment `json:"departments"`
+}
+
+type StatDepartment struct {
+	Id           int    `json:"departmentId"`
+	Name         string `json:"departmentName"`
+	NumEmployees int    `json:"numEmployees"`
+	Total        int64  `json:"total"`
+	TotalDay     int64  `json:"totalDay"`
+}
+
+const TotalWorkingDayInSeconds = 8 * 60 * 60 // TODO: Сколько должно быть отработано в день
+
 // GetAllTimesByPeriodsAndRouters
-// Общее время по периоду по всем сотрудникам
+// Стаститика. Общее время по периоду по всем сотрудникам
 // TODO: Ограничить 7 последними периодами
 func GetAllTimesByPeriodsAndRouters() *StatByPeriodsAndRouters {
 	routers := GetAllRouters()
@@ -42,11 +57,13 @@ func GetAllTimesByPeriodsAndRouters() *StatByPeriodsAndRouters {
 		statRouter := new(StatRouter)
 		statRouter.Id = router.Id
 		statRouter.Name = router.Name
+		statRouter.NumEmployees = len(GetAllUsers(0, 0).Users) // TODO: Количество сотрудников у которых есть доступ к роутеру
 		for _, period := range periods {
 			tempPeriod := make(map[string]interface{})
 			tempPeriod["id"] = period.Id
 			tempPeriod["name"] = period.Name
 			tempPeriod["total"] = getTotalTimeByPeriodAndRouter(period, router.Id)
+			tempPeriod["totalWorkTime"] = 20 * 8 * 60 * 60 // TODO: Общее рабочее время по периоду + обед, взять из производственного календаря
 
 			statRouter.Periods = append(statRouter.Periods, tempPeriod)
 		}
@@ -56,7 +73,33 @@ func GetAllTimesByPeriodsAndRouters() *StatByPeriodsAndRouters {
 	return stat
 }
 
-func getTotalTimeByPeriodAndRouter(period *Period, routerId int) int64  {
+// GetAllTimesDepartmentsByDate
+// Стаститика. Общее время за день по отделам
+func GetAllTimesDepartmentsByDate(date string) *StatDepartments {
+	departments := GetAllDepartments()
+	routers := GetAllRouters()
+	data := new(StatDepartments)
+	for _, department := range departments {
+		item := new(StatDepartment)
+		item.Id = department.Id
+		item.Name = department.Name
+		employees, _ := GetUsersByDepartment(department.Id)
+		item.NumEmployees = len(employees)
+		item.Total = 0
+		item.TotalDay = TotalWorkingDayInSeconds
+		for _, router := range routers {
+			for _, employee := range employees {
+				times := GetAllByDate(employee.MacAddress, date, router.Id)
+				item.Total += AggregateDayTotalTime(times)
+			}
+		}
+		data.Departments = append(data.Departments, item)
+	}
+
+	return data
+}
+
+func getTotalTimeByPeriodAndRouter(period *Period, routerId int) int64 {
 	var totalSeconds int64
 	users := GetAllUsers(0, 0)
 	for _, user := range users.Users {
@@ -69,7 +112,7 @@ func getTotalTimeByPeriodAndRouter(period *Period, routerId int) int64  {
 		var timesUser []*TimeUser
 		for rows.Next() {
 			timeUser := new(TimeUser)
-			err := rows.Scan(&timeUser.MacAddress, &timeUser.Second, &timeUser.RouterId)
+			err = rows.Scan(&timeUser.MacAddress, &timeUser.Second, &timeUser.RouterId)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -114,4 +157,36 @@ func GetSecondsByEndDate(date string) int64 {
 	t, _ := time.ParseInLocation("2006-01-02", date, moscowLocation)
 
 	return time.Date(t.Year(), t.Month(), t.Day(), 23, 59, 59, 0, t.Location()).Unix()
+}
+
+func GetAllByDate(macAddress string, date string, routerId int) []*TimeUser {
+	var args []interface{}
+	args = append(args, macAddress)
+	args = append(args, GetSecondsByBeginDate(date))
+	args = append(args, GetSecondsByEndDate(date))
+
+	var routerQuery string
+	if routerId != 0 {
+		routerQuery = " AND t.router_id = $4"
+		args = append(args, routerId)
+	}
+
+	rows, err := Db.Query("SELECT t.mac_address, t.second FROM time t WHERE t.mac_address = $1 AND t.second BETWEEN $2 AND $3"+routerQuery+" ORDER BY t.second", args...)
+	if err != nil {
+		panic(err)
+	}
+	defer rows.Close()
+
+	times := make([]*TimeUser, 0)
+	for rows.Next() {
+		time := new(TimeUser)
+		err = rows.Scan(&time.MacAddress, &time.Second)
+		if err != nil {
+			panic(err)
+		}
+
+		times = append(times, time)
+	}
+
+	return times
 }

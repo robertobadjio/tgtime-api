@@ -21,6 +21,7 @@ type User struct {
 	TelegramId int64  `json:"telegramId"`
 	Role       string `json:"role"`
 	Department int64  `json:"department"`
+	Position   string `json:"position"`
 }
 
 type Users struct {
@@ -47,6 +48,10 @@ type NotFoundUser struct {
 	userEmail string
 }
 
+type NotFoundUserOfId struct {
+	userId int
+}
+
 func GetAllUsers(offset, limit int) Users {
 	var args []interface{}
 	statusQuery := ""
@@ -56,7 +61,7 @@ func GetAllUsers(offset, limit int) Users {
 		args = append(args, offset)
 	}
 
-	rows, err := Db.Query("SELECT u.id, u.name, u.email, u.mac_address, u.telegram_id, u.role FROM users u ORDER BY u.name ASC"+statusQuery, args...)
+	rows, err := Db.Query("SELECT u.id, u.name, u.email, u.mac_address, u.telegram_id, u.role, u.surname, u.lastname, u.birth_date, u.position FROM users u ORDER BY u.name ASC"+statusQuery, args...)
 	if err != nil {
 		panic(err)
 	}
@@ -65,7 +70,7 @@ func GetAllUsers(offset, limit int) Users {
 	users := make([]*User, 0)
 	for rows.Next() {
 		user := new(User)
-		err := rows.Scan(&user.Id, &user.Name, &user.Email, &user.MacAddress, &user.TelegramId, &user.Role)
+		err = rows.Scan(&user.Id, &user.Name, &user.Email, &user.MacAddress, &user.TelegramId, &user.Role, &user.Surname, &user.Lastname, &user.BirthDate, &user.Position)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -79,26 +84,51 @@ func GetAllUsers(offset, limit int) Users {
 	return usersStruct
 }
 
-func GetUser(userId int64) *User {
+func GetUser(userId int64) (*User, error) {
 	user := new(User)
-	row := Db.QueryRow("SELECT u.id, u.name, u.email, u.mac_address, u.telegram_id, u.role FROM users u WHERE u.id = $1", userId)
-	err := row.Scan(&user.Id, &user.Name, &user.Email, &user.MacAddress, &user.TelegramId, &user.Role)
+	row := Db.QueryRow("SELECT u.id, u.name, u.email, u.mac_address, u.telegram_id, u.role, u.surname, u.lastname, u.birth_date, u.position FROM users u WHERE u.id = $1", userId)
+	err := row.Scan(&user.Id, &user.Name, &user.Email, &user.MacAddress, &user.TelegramId, &user.Role, &user.Surname, &user.Lastname, &user.BirthDate, &user.Position)
 	if err != nil {
-		panic(err)
+		return nil, &NotFoundUserOfId{int(userId)}
 	}
 
-	return user
+	return user, nil
 }
 
 func GetUserByEmail(email string) (*User, error) {
 	user := new(User)
-	row := Db.QueryRow("SELECT u.id, u.name, u.email, u.mac_address, u.telegram_id, u.role, u.surname, u.lastname, u.birth_date FROM users u WHERE u.email = $1", email)
-	err := row.Scan(&user.Id, &user.Name, &user.Email, &user.MacAddress, &user.TelegramId, &user.Role, &user.Surname, &user.Lastname, &user.BirthDate)
+	row := Db.QueryRow("SELECT u.id, u.name, u.email, u.mac_address, u.telegram_id, u.role, u.surname, u.lastname, u.birth_date, u.position FROM users u WHERE u.email = $1", email)
+	err := row.Scan(&user.Id, &user.Name, &user.Email, &user.MacAddress, &user.TelegramId, &user.Role, &user.Surname, &user.Lastname, &user.BirthDate, &user.Position)
 	if err != nil {
 		return nil, &NotFoundUser{email}
 	}
 
 	return user, nil
+}
+
+
+
+// GetUsersByDepartment
+// Список сотрудников по отделу
+func GetUsersByDepartment(departmentId int) ([]*User, error) {
+	rows, err := Db.Query("SELECT u.id, u.name, u.email, u.mac_address, u.telegram_id, u.role, u.surname, u.lastname, u.birth_date, u.position FROM users u WHERE u.department_id = $1", departmentId)
+	if err != nil {
+		panic(err)
+	}
+	defer rows.Close()
+
+	users := make([]*User, 0)
+	for rows.Next() {
+		user := new(User)
+		err = rows.Scan(&user.Id, &user.Name, &user.Email, &user.MacAddress, &user.TelegramId, &user.Role, &user.Surname, &user.Lastname, &user.BirthDate, &user.Position)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		users = append(users, user)
+	}
+
+	return users, nil
 }
 
 func GetUserPasswordHashByEmail(email string) string {
@@ -136,7 +166,7 @@ func CreateUser(user User) (string, int, error) {
 	password := randomString(10)
 	passwordHash, _ := bcrypt.GenerateFromPassword([]byte(password), 14) // TODO: в сервис
 	lastInsertId := 0
-	err := Db.QueryRow("INSERT INTO users (name, email, mac_address, telegram_id, password, created_at, surname, lastname, department_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id", user.Name, user.Email, user.MacAddress, user.TelegramId, passwordHash, now.Format("2006-01-02 15:04:05"), user.Surname, user.Lastname, user.Department).Scan(&lastInsertId)
+	err := Db.QueryRow("INSERT INTO users (name, email, mac_address, telegram_id, password, created_at, surname, lastname, department_id, position) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id", user.Name, user.Email, user.MacAddress, user.TelegramId, passwordHash, now.Format("2006-01-02 15:04:05"), user.Surname, user.Lastname, user.Department).Scan(&lastInsertId)
 
 	if pgerr, ok := err.(*pq.Error); ok {
 		if pgerr.Code == "23505" {
@@ -175,6 +205,10 @@ func (e *ErrorDeleteUser) Error() string {
 
 func (e *NotFoundUser) Error() string {
 	return fmt.Sprintf("User with email %s not found", e.userEmail)
+}
+
+func (e *NotFoundUserOfId) Error() string {
+	return fmt.Sprintf("User with id %d not found", e.userId)
 }
 
 func randomString(n int) string {
