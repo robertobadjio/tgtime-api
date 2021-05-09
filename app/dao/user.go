@@ -4,13 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
-	"golang.org/x/crypto/bcrypt"
 	"io/ioutil"
-	"log"
 	"net/http"
-	"net/smtp"
-	"officetime-api/app/config"
 	"officetime-api/app/model"
+	"officetime-api/app/service"
 	"strconv"
 )
 
@@ -70,7 +67,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sendEmail(user.Name, user.Email, password)
+	service.SendEmail(user.Name, user.Email, password)
 
 	user.Id = userId
 	w.WriteHeader(http.StatusCreated)
@@ -91,29 +88,4 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(userId)
-}
-
-func sendEmail(name, email, password string) {
-	// TODO: В параметры
-	auth := smtp.PlainAuth("", "info@officetime.tech", "E61kTuq7", "smtp.timeweb.ru")
-
-	// Here we do it all: connect to our server, set up a message and send it
-	to := []string{email}
-	msg := []byte("To: " + email + "\r\n" +
-		"Subject: Регистрация на OfficeTime\r\n" +
-		"Добро пожаловать " + name + "! Ваш пароль: " + password + "\r\n\r\n" +
-		"Для начала работы напишите '/start' телеграм-боту @" + config.Config.TelegramBot)
-	err := smtp.SendMail("smtp.timeweb.ru:25", auth, "info@officetime.tech", to, msg)
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
-// TODO: передать пароль за место email
-func CheckAuth(email, password string) bool {
-	userPasswordHash := model.GetUserPasswordHashByEmail(email)
-
-	err := bcrypt.CompareHashAndPassword([]byte(userPasswordHash), []byte(password))
-
-	return err == nil
 }

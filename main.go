@@ -16,6 +16,7 @@ import (
 	"officetime-api/app/config"
 	"officetime-api/app/dao"
 	"officetime-api/app/model"
+	"officetime-api/app/service"
 	"strconv"
 	"strings"
 	"time"
@@ -70,7 +71,8 @@ func GetTokenHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !dao.CheckAuth(data.Email, data.Password) {
+	userPasswordHash := model.GetUserPasswordHashByEmail(user.Email) // TODO: Убрать
+	if !service.CheckAuth(userPasswordHash, data.Password) {
 		fmt.Fprintf(w, "Wrong password")
 		return
 	}
@@ -80,7 +82,7 @@ func GetTokenHandler(w http.ResponseWriter, r *http.Request) {
 
 func CreateTokenPair(user *model.User) *TokenDetails {
 	td := &TokenDetails{}
-	td.AccessTokenExpires = time.Now().Add(time.Minute * 5).Unix()    // TODO: время в конфиг
+	td.AccessTokenExpires = time.Now().Add(time.Minute * 5).Unix()     // TODO: время в конфиг
 	td.RefreshTokenExpires = time.Now().Add(time.Hour * 24 * 7).Unix() // TODO: время в конфиг
 
 	// Создаем новый токен

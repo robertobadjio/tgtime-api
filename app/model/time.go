@@ -125,7 +125,7 @@ func getTotalTimeByPeriodAndRouter(period *Period, routerId int) int64 {
 	return totalSeconds
 }
 
-func AggregateDayTotalTime(times []*TimeUser) int64 {
+/*func AggregateDayTotalTime(times []*TimeUser) int64 {
 	num := 1
 	for i, time := range times {
 		if i == 0 {
@@ -133,7 +133,7 @@ func AggregateDayTotalTime(times []*TimeUser) int64 {
 		}
 
 		delta := time.Second - times[i-1].Second
-		if delta <= 31 { // TODO: в параметры
+		if delta <= 34 { // TODO: в параметры
 			num++
 		}
 	}
@@ -143,6 +143,23 @@ func AggregateDayTotalTime(times []*TimeUser) int64 {
 	}
 
 	return int64(num * 30) // TODO: в параметры
+}*/
+
+// AggregateDayTotalTime Подсчет общего количества секунд
+func AggregateDayTotalTime(times []*TimeUser) int64 {
+	var sum int64
+	for i, time := range times {
+		if i == 0 {
+			continue
+		}
+		delta := time.Second - times[i-1].Second
+		// Не учитываем перерывы меньше 15 минут
+		if delta <= 15 * 60 {
+			sum += delta
+		}
+	}
+
+	return sum
 }
 
 func GetSecondsByBeginDate(date string) int64 {
