@@ -31,6 +31,7 @@ type PeriodUser struct {
 
 type Time struct {
 	Date      string           `json:"date"`
+	Weekend   bool             `json:"weekend"`
 	Total     int64            `json:"total"`
 	BeginTime int64            `json:"beginTime"`
 	EndTime   int64            `json:"endTime"`
@@ -69,6 +70,7 @@ func GetTimeDayAll(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// GetTimeByPeriod
 // TODO: перенести в model.GetTimeByPeriod()
 func GetTimeByPeriod(w http.ResponseWriter, r *http.Request) {
 	userId := mux.Vars(r)["id"]
@@ -100,10 +102,17 @@ func GetTimeByPeriod(w http.ResponseWriter, r *http.Request) {
 	}
 
 	routers := model.GetAllRouters()
-
+	weekend := model.GetWeekendByPeriod(begin, end)
 	for curr := begin; curr.Before(end); curr = curr.AddDate(0, 0, 1) {
 		timeStruct := new(Time)
 		timeStruct.Date = curr.Format("2006-01-02")
+		// TODO: В метод
+		if _, ok := weekend[curr.Format("2006-01-02")]; ok {
+			timeStruct.Weekend = true
+		} else {
+			timeStruct.Weekend = false
+		}
+
 		timeStruct.Total = getDayTotalSecondsByUser(macAddress, curr.Format("2006-01-02"), 0)
 		timeStruct.BeginTime = GetDayTimeFromTimeTable(macAddress, curr.Format("2006-01-02"), "ASC")
 		timeStruct.EndTime = GetDayTimeFromTimeTable(macAddress, curr.Format("2006-01-02"), "DESC")
