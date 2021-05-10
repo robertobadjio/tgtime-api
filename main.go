@@ -49,7 +49,7 @@ var db *sql.DB
 var mySigningKey = []byte(config.Config.AuthSigningKey)
 var refreshSecretKey = []byte(config.Config.AuthRefreshKey)
 
-func GetTokenHandler(w http.ResponseWriter, r *http.Request) {
+func Login(w http.ResponseWriter, r *http.Request) {
 	td := &TokenDetails{}
 	td.AccessTokenExpires = time.Now().Add(time.Minute * time.Duration(config.Config.AuthAccessTokenExpires)).Unix()
 	td.RefreshTokenExpires = time.Now().Add(time.Hour * time.Duration(config.Config.AuthRefreshTokenExpires)).Unix()
@@ -268,7 +268,7 @@ func main() {
 	router := mux.NewRouter().StrictSlash(true)
 	router.Use(commonMiddleware)
 
-	router.HandleFunc("/api-service/login", GetTokenHandler).Methods("POST")
+	router.HandleFunc("/api-service/login", Login).Methods("POST")
 	router.HandleFunc("/api-service/token/refresh", Refresh).Methods("POST")
 	router.HandleFunc("/api-service/logout", Logout).Methods("POST")
 
