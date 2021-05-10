@@ -46,13 +46,13 @@ func (ad *AccessDetails) isAdmin() bool {
 var db *sql.DB
 
 // Global secret key
-var mySigningKey = []byte("vtlcgjgek")     // TODO: ключ в конфиг
-var refreshSecretKey = []byte("vtlcgjgek") // TODO: ключ в конфиг
+var mySigningKey = []byte(config.Config.AuthSigningKey)
+var refreshSecretKey = []byte(config.Config.AuthSecretKey)
 
 func GetTokenHandler(w http.ResponseWriter, r *http.Request) {
 	td := &TokenDetails{}
-	td.AccessTokenExpires = time.Now().Add(time.Minute * 30).Unix()    // TODO: время в конфиг
-	td.RefreshTokenExpires = time.Now().Add(time.Hour * 24 * 7).Unix() // TODO: время в конфиг
+	td.AccessTokenExpires = time.Now().Add(time.Minute * time.Duration(config.Config.AuthAccessTokenExpires)).Unix()
+	td.RefreshTokenExpires = time.Now().Add(time.Hour * time.Duration(config.Config.AuthRefreshTokenExpires)).Unix()
 
 	reqBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -103,14 +103,21 @@ func CreateTokenPair(user *model.User) *TokenDetails {
 	accessTokenClaims["position"] = user.Position
 
 	// Подписываем токен нашим секретным ключем
-	td.AccessToken, _ = token.SignedString(mySigningKey) // TODO: обработка ошибки
+	var err error
+	td.AccessToken, err = token.SignedString(mySigningKey)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// Creating Refresh Token
 	refreshTokenClaims := jwt.MapClaims{}
 	refreshTokenClaims["userId"] = user.Id
 	refreshTokenClaims["exp"] = td.RefreshTokenExpires
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshTokenClaims)
-	td.RefreshToken, _ = refreshToken.SignedString(refreshSecretKey) // TODO: обработка ошибки
+	td.RefreshToken, err = refreshToken.SignedString(refreshSecretKey)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	return td
 }
@@ -299,6 +306,8 @@ func main() {
 	router.Handle("/api-service/stat/periods-and-routers", isAuthorized(dao.GetStatByPeriodsAndRouters)).Methods("GET")
 	router.Handle("/api-service/stat/departments/{date}", isAuthorized(dao.GetAllTimesDepartmentsByDate)).Methods("GET")
 
+	router.Handle("/api-service/weekend", isAuthorized(dao.GetWeekend)).Methods("GET")
+
 	log.Fatal(http.ListenAndServe(":8080", c.Handler(router)))
 }
 
@@ -377,8 +386,10 @@ func isAuthorized(endpoint func(http.ResponseWriter, *http.Request)) http.Handle
 			}
 
 			id := mux.Vars(r)["id"]
-			userId, _ := strconv.Atoi(id)
-			// TODO: обработка ошибок
+			userId, err := strconv.Atoi(id)
+			if err != nil {
+				log.Fatal(err)
+			}
 
 			if au.UserId != uint64(userId) && !au.isAdmin() {
 				fmt.Fprintf(w, "Access denied")

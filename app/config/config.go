@@ -8,19 +8,23 @@ import (
 var Config appConfig
 
 type appConfig struct {
-	Env string
-	HostName string
-	HostPort int
-	UserName string
-	Password string
-	DataBaseName string
-	SslMode string
-	BotToken string
-	RouterAddress string
+	Env            string
+	HostName       string
+	HostPort       int
+	UserName       string
+	Password       string
+	DataBaseName   string
+	SslMode        string
+	BotToken       string
+	RouterAddress  string
 	RouterUserName string
 	RouterPassword string
-	WebHookPath string
-	TelegramBot string
+	WebHookPath    string
+	TelegramBot    string
+	AuthSigningKey string
+	AuthSecretKey  string
+	AuthAccessTokenExpires int
+	AuthRefreshTokenExpires int
 }
 
 func LoadConfig(configPaths ...string) error {
