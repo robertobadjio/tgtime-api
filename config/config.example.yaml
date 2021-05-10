@@ -11,3 +11,8 @@ RouterUserName: ''
 RouterPassword: ''
 webHookPath: ''
 TelegramBot: ''
+
+AuthSigningKey: ''
+AuthRefreshKey: ''
+AuthAccessTokenExpires: 30 # minutes
+AuthRefreshTokenExpires: 168 # hours

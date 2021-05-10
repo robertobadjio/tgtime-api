@@ -47,7 +47,7 @@ var db *sql.DB
 
 // Global secret key
 var mySigningKey = []byte(config.Config.AuthSigningKey)
-var refreshSecretKey = []byte(config.Config.AuthSecretKey)
+var refreshSecretKey = []byte(config.Config.AuthRefreshKey)
 
 func GetTokenHandler(w http.ResponseWriter, r *http.Request) {
 	td := &TokenDetails{}
@@ -106,7 +106,7 @@ func CreateTokenPair(user *model.User) *TokenDetails {
 	var err error
 	td.AccessToken, err = token.SignedString(mySigningKey)
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 
 	// Creating Refresh Token
@@ -116,7 +116,7 @@ func CreateTokenPair(user *model.User) *TokenDetails {
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshTokenClaims)
 	td.RefreshToken, err = refreshToken.SignedString(refreshSecretKey)
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 
 	return td
@@ -124,7 +124,6 @@ func CreateTokenPair(user *model.User) *TokenDetails {
 
 func Logout(w http.ResponseWriter, r *http.Request) {
 	_, err := ExtractTokenMetadata(r) // TODO: au
-
 	if err != nil {
 		w.Write([]byte("Successfully logged out"))
 		return
@@ -386,10 +385,7 @@ func isAuthorized(endpoint func(http.ResponseWriter, *http.Request)) http.Handle
 			}
 
 			id := mux.Vars(r)["id"]
-			userId, err := strconv.Atoi(id)
-			if err != nil {
-				log.Fatal(err)
-			}
+			userId, _ := strconv.Atoi(id) // TODO: если обрабатывать ошибку, апи падает
 
 			if au.UserId != uint64(userId) && !au.isAdmin() {
 				fmt.Fprintf(w, "Access denied")
