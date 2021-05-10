@@ -82,8 +82,8 @@ func GetTokenHandler(w http.ResponseWriter, r *http.Request) {
 
 func CreateTokenPair(user *model.User) *TokenDetails {
 	td := &TokenDetails{}
-	td.AccessTokenExpires = time.Now().Add(time.Minute * 5).Unix()     // TODO: время в конфиг
-	td.RefreshTokenExpires = time.Now().Add(time.Hour * 24 * 7).Unix() // TODO: время в конфиг
+	td.AccessTokenExpires = time.Now().Add(time.Minute * time.Duration(config.Config.AuthAccessTokenExpires)).Unix()
+	td.RefreshTokenExpires = time.Now().Add(time.Hour * time.Duration(config.Config.AuthRefreshTokenExpires)).Unix()
 
 	// Создаем новый токен
 	token := jwt.New(jwt.SigningMethodHS256)
