@@ -3,13 +3,19 @@ package dao
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/dgrijalva/jwt-go"
 	"io/ioutil"
 	"net/http"
 	"officetime-api/app/config"
 	"officetime-api/app/model"
 	"officetime-api/app/service"
+	"strconv"
 	"time"
 )
+
+type RefreshToken struct {
+	Token string `json:"refresh_token"`
+}
 
 type authData struct {
 	Email    string `json:"email"`
@@ -32,6 +38,8 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 
 	// TODO: сделать разлогин через BlackWhite lists
 }
+
+var refreshSecretKey = []byte(config.Config.AuthRefreshKey)
 
 func Login(w http.ResponseWriter, r *http.Request) {
 	td := &TokenDetails{}
@@ -62,4 +70,56 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(service.CreateTokenPair(user))
+}
+
+func Refresh(w http.ResponseWriter, r *http.Request) {
+	reqBody, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		panic(err)
+	}
+
+	var refreshToken RefreshToken
+	err = json.Unmarshal(reqBody, &refreshToken)
+	if err != nil {
+		panic(err)
+	}
+
+	// Verify the token
+	token, err := jwt.Parse(refreshToken.Token, func(token *jwt.Token) (interface{}, error) {
+		// Make sure that the token method conform to "SigningMethodHMAC"
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return refreshSecretKey, nil
+	})
+
+	w.Header().Set("Content-Type", "application/json")
+	// If there is an error, the token must have expired
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized) // "Refresh token expired"
+		return
+	}
+
+	// Is token valid?
+	if _, ok := token.Claims.(jwt.Claims); !ok && !token.Valid {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	// Since token is valid, get the uuid:
+	claims, ok := token.Claims.(jwt.MapClaims) //the token claims should conform to MapClaims
+	if ok && token.Valid {
+		userId, err := strconv.ParseInt(fmt.Sprintf("%.f", claims["userId"]), 10, 64)
+		if err != nil {
+			w.WriteHeader(http.StatusUnprocessableEntity) // TODO: вернуть "Error occurred"
+			fmt.Println("Error occurred")
+			//w.Write([]byte("Error occurred"))
+			return
+		}
+
+		user, _ := model.GetUser(userId)
+		// Create new pairs of refresh and access tokens
+
+		json.NewEncoder(w).Encode(service.CreateTokenPair(user)) // TODO: обработка ошибки, если пользователь не найден
+	}
 }

@@ -2,14 +2,12 @@ package main
 
 import (
 	"database/sql"
-	"encoding/json"
 	"flag"
 	"fmt"
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/cors"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"officetime-api/app/aggregator"
@@ -25,63 +23,6 @@ var db *sql.DB
 
 // Global secret key
 var mySigningKey = []byte(config.Config.AuthSigningKey)
-var refreshSecretKey = []byte(config.Config.AuthRefreshKey)
-
-type RefreshToken struct {
-	Token string `json:"refresh_token"`
-}
-
-func Refresh(w http.ResponseWriter, r *http.Request) {
-	reqBody, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		panic(err)
-	}
-
-	var refreshToken RefreshToken
-	err = json.Unmarshal(reqBody, &refreshToken)
-	if err != nil {
-		panic(err)
-	}
-
-	// Verify the token
-	token, err := jwt.Parse(refreshToken.Token, func(token *jwt.Token) (interface{}, error) {
-		// Make sure that the token method conform to "SigningMethodHMAC"
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-		}
-		return refreshSecretKey, nil
-	})
-
-	w.Header().Set("Content-Type", "application/json")
-	// If there is an error, the token must have expired
-	if err != nil {
-		w.WriteHeader(http.StatusUnauthorized) // "Refresh token expired"
-		return
-	}
-
-	// Is token valid?
-	if _, ok := token.Claims.(jwt.Claims); !ok && !token.Valid {
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
-
-	// Since token is valid, get the uuid:
-	claims, ok := token.Claims.(jwt.MapClaims) //the token claims should conform to MapClaims
-	if ok && token.Valid {
-		userId, err := strconv.ParseInt(fmt.Sprintf("%.f", claims["userId"]), 10, 64)
-		if err != nil {
-			w.WriteHeader(http.StatusUnprocessableEntity) // TODO: вернуть "Error occurred"
-			fmt.Println("Error occurred")
-			//w.Write([]byte("Error occurred"))
-			return
-		}
-
-		user, _ := model.GetUser(userId)
-		// Create new pairs of refresh and access tokens
-
-		json.NewEncoder(w).Encode(service.CreateTokenPair(user)) // TODO: обработка ошибки, если пользователь не найден
-	}
-}
 
 func main() {
 	var configPath string
@@ -112,7 +53,7 @@ func main() {
 	router.Use(commonMiddleware)
 
 	router.HandleFunc("/api-service/login", dao.Login).Methods("POST")
-	router.HandleFunc("/api-service/token/refresh", Refresh).Methods("POST")
+	router.HandleFunc("/api-service/token/refresh", dao.Refresh).Methods("POST")
 	router.HandleFunc("/api-service/logout", dao.Logout).Methods("POST")
 
 	router.Handle("/metrics", promhttp.Handler())
