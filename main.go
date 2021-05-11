@@ -77,49 +77,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewEncoder(w).Encode(CreateTokenPair(user))
-}
-
-func CreateTokenPair(user *model.User) *TokenDetails {
-	td := &TokenDetails{}
-	td.AccessTokenExpires = time.Now().Add(time.Minute * time.Duration(config.Config.AuthAccessTokenExpires)).Unix()
-	td.RefreshTokenExpires = time.Now().Add(time.Hour * time.Duration(config.Config.AuthRefreshTokenExpires)).Unix()
-
-	// Создаем новый токен
-	token := jwt.New(jwt.SigningMethodHS256)
-
-	accessTokenClaims := token.Claims.(jwt.MapClaims)
-	// Устанавливаем набор параметров для токена
-	accessTokenClaims["authorized"] = true
-	accessTokenClaims["userId"] = user.Id
-	accessTokenClaims["userFirstname"] = user.Name
-	accessTokenClaims["userSurname"] = user.Surname
-	accessTokenClaims["userLastname"] = user.Lastname
-	accessTokenClaims["userEmail"] = user.Email
-	accessTokenClaims["userBirthDate"] = user.BirthDate
-	accessTokenClaims["exp"] = td.AccessTokenExpires
-	accessTokenClaims["role"] = user.Role // TODO: костыль, RBAC?
-	accessTokenClaims["department"] = user.Department
-	accessTokenClaims["position"] = user.Position
-
-	// Подписываем токен нашим секретным ключем
-	var err error
-	td.AccessToken, err = token.SignedString(mySigningKey)
-	if err != nil {
-		panic(err)
-	}
-
-	// Creating Refresh Token
-	refreshTokenClaims := jwt.MapClaims{}
-	refreshTokenClaims["userId"] = user.Id
-	refreshTokenClaims["exp"] = td.RefreshTokenExpires
-	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshTokenClaims)
-	td.RefreshToken, err = refreshToken.SignedString(refreshSecretKey)
-	if err != nil {
-		panic(err)
-	}
-
-	return td
+	json.NewEncoder(w).Encode(service.CreateTokenPair(user))
 }
 
 func Logout(w http.ResponseWriter, r *http.Request) {
@@ -236,7 +194,7 @@ func Refresh(w http.ResponseWriter, r *http.Request) {
 		user, _ := model.GetUser(userId)
 		// Create new pairs of refresh and access tokens
 
-		json.NewEncoder(w).Encode(CreateTokenPair(user)) // TODO: обработка ошибки, если пользователь не найден
+		json.NewEncoder(w).Encode(service.CreateTokenPair(user)) // TODO: обработка ошибки, если пользователь не найден
 	}
 }
 
