@@ -1,9 +1,12 @@
 package service
 
 import (
+	"fmt"
 	"github.com/dgrijalva/jwt-go"
+	"net/http"
 	"officetime-api/app/config"
 	"officetime-api/app/model"
+	"strings"
 	"time"
 )
 
@@ -58,4 +61,34 @@ func CreateTokenPair(user *model.User) *TokenDetails {
 	}
 
 	return td
+}
+
+func VerifyToken(r *http.Request) (*jwt.Token, error) {
+	tokenString := extractToken(r)
+
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		//Make sure that the token method conform to "SigningMethodHMAC"
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+
+		return mySigningKey, nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return token, nil
+}
+
+func extractToken(r *http.Request) string {
+	bearToken := r.Header.Get("Token")
+	//normally Authorization the_token_xxx
+	strArr := strings.Split(bearToken, " ")
+
+	if len(strArr) == 1 {
+		return strArr[0]
+	}
+	return ""
 }
