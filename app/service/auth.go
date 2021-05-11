@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"officetime-api/app/config"
 	"officetime-api/app/model"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -13,6 +14,15 @@ import (
 // Global secret key
 var mySigningKey = []byte(config.Config.AuthSigningKey)
 var refreshSecretKey = []byte(config.Config.AuthRefreshKey)
+
+type AccessDetails struct {
+	UserId uint64
+	Role   string
+}
+
+func (ad *AccessDetails) IsAdmin() bool {
+	return "Admin" == ad.Role // TODO: const
+}
 
 type TokenDetails struct {
 	AccessToken         string `json:"access_token"`
@@ -91,4 +101,26 @@ func extractToken(r *http.Request) string {
 		return strArr[0]
 	}
 	return ""
+}
+
+func ExtractTokenMetadata(r *http.Request) (*AccessDetails, error) {
+	token, err := VerifyToken(r)
+
+	if err != nil {
+		return nil, err
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if ok && token.Valid {
+		userId, err := strconv.ParseUint(fmt.Sprintf("%.f", claims["userId"]), 10, 64)
+		if err != nil {
+			return nil, err
+		}
+		role := fmt.Sprintf("%s", claims["role"])
+		return &AccessDetails{
+			UserId: userId,
+			Role:   role,
+		}, nil
+	}
+	return nil, err
 }

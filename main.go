@@ -26,20 +26,11 @@ type authData struct {
 	Password string `json:"password"`
 }
 
-type AccessDetails struct {
-	UserId uint64
-	Role   string
-}
-
 type TokenDetails struct {
 	AccessToken         string `json:"access_token"`
 	RefreshToken        string `json:"refresh_token"`
 	AccessTokenExpires  int64  `json:"access_token_expires"`
 	RefreshTokenExpires int64  `json:"refresh_token_expires"`
-}
-
-func (ad *AccessDetails) isAdmin() bool {
-	return "Admin" == ad.Role // TODO: const
 }
 
 var db *sql.DB
@@ -80,35 +71,13 @@ func Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func Logout(w http.ResponseWriter, r *http.Request) {
-	_, err := ExtractTokenMetadata(r) // TODO: au
+	_, err := service.ExtractTokenMetadata(r) // TODO: au
 	if err != nil {
 		w.Write([]byte("Successfully logged out"))
 		return
 	}
 
 	// TODO: сделать разлогин через BlackWhite lists
-}
-
-func ExtractTokenMetadata(r *http.Request) (*AccessDetails, error) {
-	token, err := service.VerifyToken(r)
-
-	if err != nil {
-		return nil, err
-	}
-
-	claims, ok := token.Claims.(jwt.MapClaims)
-	if ok && token.Valid {
-		userId, err := strconv.ParseUint(fmt.Sprintf("%.f", claims["userId"]), 10, 64)
-		if err != nil {
-			return nil, err
-		}
-		role := fmt.Sprintf("%s", claims["role"])
-		return &AccessDetails{
-			UserId: userId,
-			Role:   role,
-		}, nil
-	}
-	return nil, err
 }
 
 type RefreshToken struct {
@@ -295,7 +264,7 @@ func isAuthorized(endpoint func(http.ResponseWriter, *http.Request)) http.Handle
 				return
 			}
 
-			au, err := ExtractTokenMetadata(r)
+			au, err := service.ExtractTokenMetadata(r)
 			if err != nil {
 				if "Token is expired" == err.Error() {
 					w.WriteHeader(http.StatusUnauthorized)
@@ -314,7 +283,7 @@ func isAuthorized(endpoint func(http.ResponseWriter, *http.Request)) http.Handle
 			id := mux.Vars(r)["id"]
 			userId, _ := strconv.Atoi(id) // TODO: если обрабатывать ошибку, апи падает
 
-			if au.UserId != uint64(userId) && !au.isAdmin() {
+			if au.UserId != uint64(userId) && !au.IsAdmin() {
 				fmt.Fprintf(w, "Access denied")
 				return
 			}
