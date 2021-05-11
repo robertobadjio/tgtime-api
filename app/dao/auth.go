@@ -23,6 +23,16 @@ type TokenDetails struct {
 	RefreshTokenExpires int64  `json:"refresh_token_expires"`
 }
 
+func Logout(w http.ResponseWriter, r *http.Request) {
+	_, err := service.ExtractTokenMetadata(r) // TODO: au
+	if err != nil {
+		w.Write([]byte("Successfully logged out"))
+		return
+	}
+
+	// TODO: сделать разлогин через BlackWhite lists
+}
+
 func Login(w http.ResponseWriter, r *http.Request) {
 	td := &TokenDetails{}
 	td.AccessTokenExpires = time.Now().Add(time.Minute * time.Duration(config.Config.AuthAccessTokenExpires)).Unix()

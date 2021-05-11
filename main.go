@@ -31,16 +31,6 @@ type RefreshToken struct {
 	Token string `json:"refresh_token"`
 }
 
-func Logout(w http.ResponseWriter, r *http.Request) {
-	_, err := service.ExtractTokenMetadata(r) // TODO: au
-	if err != nil {
-		w.Write([]byte("Successfully logged out"))
-		return
-	}
-
-	// TODO: сделать разлогин через BlackWhite lists
-}
-
 func Refresh(w http.ResponseWriter, r *http.Request) {
 	reqBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -123,7 +113,7 @@ func main() {
 
 	router.HandleFunc("/api-service/login", dao.Login).Methods("POST")
 	router.HandleFunc("/api-service/token/refresh", Refresh).Methods("POST")
-	router.HandleFunc("/api-service/logout", Logout).Methods("POST")
+	router.HandleFunc("/api-service/logout", dao.Logout).Methods("POST")
 
 	router.Handle("/metrics", promhttp.Handler())
 
