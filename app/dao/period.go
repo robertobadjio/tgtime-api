@@ -96,7 +96,7 @@ func DeletePeriod(w http.ResponseWriter, r *http.Request) {
 	periodId := mux.Vars(r)["id"]
 
 	var period model.Period
-	Db.QueryRow("UPDATE period SET deleted = true WHERE id = $1", periodId) // TODO: const
+	Db.QueryRow("UPDATE period SET deleted = true WHERE id = $1", periodId)
 
 	err := json.NewEncoder(w).Encode(period)
 	if err != nil {
