@@ -3,6 +3,7 @@ package model
 import (
 	"database/sql"
 	"log"
+	"math"
 	"time"
 )
 
@@ -42,7 +43,6 @@ type StatDepartment struct {
 	Total        int64  `json:"total"`
 	TotalDay     int64  `json:"totalDay"`
 }
-
 
 type Break struct {
 	BeginTime int64 `json:"beginTime"`
@@ -181,7 +181,7 @@ func AggregateDayTotalTime(times []*TimeUser) int64 {
 		}
 		delta := time.Second - times[i-1].Second
 		// Не учитываем перерывы меньше 15 минут
-		if delta <= 15 * 60 {
+		if delta <= 15*60 {
 			sum += delta
 		}
 	}
@@ -381,6 +381,66 @@ func GetAllBreaksByTimesOld(times []*TimeUser) []*Break {
 	return breaks
 }
 
-func GetStatWorkingPeriod() {
+type statWorkingPeriod struct {
+	StartWorkingDate  string `json:"start_working_date"`
+	EndWorkingDate    string `json:"end_working_date"`
+	WorkingHours      int64  `json:"working_hours"`
+	TotalWorkingHours int    `json:"total_working_hours"`
+}
 
+func GetStatWorkingPeriod(userId, periodId int) *statWorkingPeriod {
+	period, _ := GetPeriodById(periodId)
+
+	periodUser := GetTimeByPeriod(userId, periodId)
+	var totalMonthWorkingTime int64
+	for _, timeResponse := range periodUser.Time {
+		totalMonthWorkingTime += timeResponse.Total
+	}
+
+	start, err := time.Parse(time.RFC3339, period.BeginDate)
+	if err != nil {
+		panic(err)
+	}
+	end, err := time.Parse(time.RFC3339, period.EndDate)
+	if err != nil {
+		panic(err)
+	}
+
+	return &statWorkingPeriod{
+		StartWorkingDate:  start.Format("02.01.2006"),
+		EndWorkingDate:    end.Format("02.01.2006"),
+		WorkingHours:      totalMonthWorkingTime / 3600,
+		TotalWorkingHours: GetWorkHoursBetween(start, GetNow()),
+	}
+}
+
+func GetNow() time.Time {
+	return time.Now().In(GetMoscowLocation())
+}
+
+func GetMoscowLocation() *time.Location {
+	moscowLocation, _ := time.LoadLocation("Europe/Moscow")
+	return moscowLocation
+}
+
+// getWeekdaysBetween
+// https://switch-case.ru/61590709
+func getWeekdaysBetween(start, end time.Time) int {
+	offset := -int(start.Weekday())
+	start = start.AddDate(0, 0, -int(start.Weekday()))
+
+	offset += int(end.Weekday())
+	if end.Weekday() == time.Sunday {
+		offset++
+	}
+	end = end.AddDate(0, 0, -int(end.Weekday()))
+
+	dif := end.Sub(start).Truncate(time.Hour * 24)
+	weeks := (dif.Hours() / 24) / 7
+
+	return int(math.Round(weeks)*5) + offset
+}
+
+func GetWorkHoursBetween(start, end time.Time) int {
+	return getWeekdaysBetween(start, end) * 8
 }

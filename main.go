@@ -88,6 +88,7 @@ func main() {
 
 	router.Handle("/api-service/stat/periods-and-routers", isAuthorized(dao.GetStatByPeriodsAndRouters)).Methods("GET")
 	router.Handle("/api-service/stat/departments/{date}", isAuthorized(dao.GetAllTimesDepartmentsByDate)).Methods("GET")
+	router.Handle("/api-service/stat/working-period/{id}/period/{period}", isAuthorized(dao.GetStatWorkingPeriod)).Methods("GET")
 
 	router.Handle("/api-service/weekend", isAuthorized(dao.GetWeekend)).Methods("GET")
 

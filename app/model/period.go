@@ -1,6 +1,7 @@
 package model
 
 import (
+	"fmt"
 	"time"
 )
 
@@ -14,6 +15,10 @@ type Period struct {
 
 type Periods struct {
 	Periods []*Period `json:"periods"`
+}
+
+type NotFoundPeriod struct {
+	periodId int
 }
 
 func GetAllPeriods() []*Period {
@@ -43,4 +48,19 @@ func GetAllPeriods() []*Period {
 	}
 
 	return periods
+}
+
+func GetPeriodById(periodId int) (*Period, error) {
+	period := new(Period)
+	row := Db.QueryRow("SELECT id, name, year, begin_at, ended_at FROM period WHERE id = $1", periodId)
+	err := row.Scan(&period.Id, &period.Name, &period.Year, &period.BeginDate, &period.EndDate)
+	if err != nil {
+		return nil, &NotFoundUserOfId{int(periodId)}
+	}
+
+	return period, nil
+}
+
+func (e *NotFoundPeriod) Error() string {
+	return fmt.Sprintf("Period with id %d not found", e.periodId)
 }
