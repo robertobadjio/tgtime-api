@@ -285,10 +285,7 @@ func GetTimeByPeriod(userId, period int) PeriodUser {
 				continue
 			}
 			var responseRouters []RouterResponse
-			var responseRouter RouterResponse
-			responseRouter.Total = GetDayTotalSecondsByUser(macAddress, curr.Format("2006-01-02"), router.Id)
-			responseRouter.Name = router.Name
-			responseRouter.Description = router.Description
+			responseRouter := buildResponseRouter(router, macAddress, curr)
 			responseRouters = append(responseRouters, responseRouter)
 			timeStruct.Routers = responseRouters
 			timeStruct.Total -= responseRouter.Total
@@ -300,6 +297,17 @@ func GetTimeByPeriod(userId, period int) PeriodUser {
 	return response
 }
 
+func buildResponseRouter(router *Router, macAddress string, curr time.Time) RouterResponse {
+	var responseRouter RouterResponse
+	responseRouter.Total = GetDayTotalSecondsByUser(macAddress, curr.Format("2006-01-02"), router.Id)
+	responseRouter.Name = router.Name
+	responseRouter.Description = router.Description
+
+	return responseRouter
+}
+
+// GetTimeDayAll
+// TODO: Аргумент date string -> time.Time
 func GetTimeDayAll(userId int, date string) Time {
 	var macAddress string
 	var telegramId int64
@@ -315,6 +323,19 @@ func GetTimeDayAll(userId int, date string) Time {
 	timeOutput.EndTime = GetDayTimeFromTimeTable(macAddress, date, "DESC")
 	times := GetAllByDate(macAddress, date, 0)
 	timeOutput.Break = GetAllBreaksByTimesOld(times)
+
+	// Собираем routers
+	dateTimeStruct, err := time.Parse("2006-01-02", date)
+	if err != nil {
+		panic(err)
+	}
+	routers := GetAllRouters()
+	var responseRouters []RouterResponse
+	for _, router := range routers {
+		responseRouter := buildResponseRouter(router, macAddress, dateTimeStruct)
+		responseRouters = append(responseRouters, responseRouter)
+	}
+	timeOutput.Routers = responseRouters
 
 	return timeOutput
 }
