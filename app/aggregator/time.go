@@ -11,7 +11,7 @@ var Db *sql.DB
 
 func AggregateTime() {
 	moscowLocation, _ := time.LoadLocation("Europe/Moscow")
-	date := time.Now().AddDate(0, 0, -1).In(moscowLocation).Format("2006-01-02")
+	date := time.Now().AddDate(0, 0, -1).In(moscowLocation)
 
 	for _, user := range model.GetAllUsers(0, 0).Users {
 		times := model.GetAllByDate(user.MacAddress, date, 0)

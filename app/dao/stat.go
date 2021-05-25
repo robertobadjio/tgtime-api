@@ -20,7 +20,7 @@ func GetAllTimesDepartmentsByDate(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Invalid date")
 		return
 	}
-	json.NewEncoder(w).Encode(model.GetAllTimesDepartmentsByDate(date))
+	json.NewEncoder(w).Encode(model.GetAllTimesDepartmentsByDate(buildTimeStructFromDate(date)))
 }
 
 func GetStatWorkingPeriod(w http.ResponseWriter, r *http.Request) {

@@ -102,7 +102,7 @@ func GetAllTimesByPeriodsAndRouters() *StatByPeriodsAndRouters {
 
 // GetAllTimesDepartmentsByDate
 // Стаститика. Общее время за день по отделам
-func GetAllTimesDepartmentsByDate(date string) *StatDepartments {
+func GetAllTimesDepartmentsByDate(date time.Time) *StatDepartments {
 	departments := GetAllDepartments()
 	routers := GetAllRouters()
 	data := new(StatDepartments)
@@ -203,11 +203,11 @@ func GetSecondsByEndDate(date string) int64 {
 	return time.Date(t.Year(), t.Month(), t.Day(), 23, 59, 59, 0, t.Location()).Unix()
 }
 
-func GetAllByDate(macAddress string, date string, routerId int) []*TimeUser {
+func GetAllByDate(macAddress string, date time.Time, routerId int) []*TimeUser {
 	var args []interface{}
 	args = append(args, macAddress)
-	args = append(args, GetSecondsByBeginDate(date))
-	args = append(args, GetSecondsByEndDate(date))
+	args = append(args, GetSecondsByBeginDate(date.Format("2006-01-02")))
+	args = append(args, GetSecondsByEndDate(date.Format("2006-01-02")))
 
 	var routerQuery string
 	if routerId != 0 {
@@ -273,10 +273,10 @@ func GetTimeByPeriod(userId, period int) PeriodUser {
 			timeStruct.Weekend = false
 		}
 
-		timeStruct.Total = GetDayTotalSecondsByUser(macAddress, curr.Format("2006-01-02"), 0)
-		timeStruct.BeginTime = GetDayTimeFromTimeTable(macAddress, curr.Format("2006-01-02"), "ASC")
-		timeStruct.EndTime = GetDayTimeFromTimeTable(macAddress, curr.Format("2006-01-02"), "DESC")
-		times := GetAllByDate(macAddress, curr.Format("2006-01-02"), 0)
+		timeStruct.Total = GetDayTotalSecondsByUser(macAddress, curr, 0)
+		timeStruct.BeginTime = GetDayTimeFromTimeTable(macAddress, curr, "ASC")
+		timeStruct.EndTime = GetDayTimeFromTimeTable(macAddress, curr, "DESC")
+		times := GetAllByDate(macAddress, curr, 0)
 		timeStruct.Break = GetAllBreaksByTimesOld(times)
 
 		// Собираем routers
@@ -299,16 +299,14 @@ func GetTimeByPeriod(userId, period int) PeriodUser {
 
 func buildResponseRouter(router *Router, macAddress string, curr time.Time) RouterResponse {
 	var responseRouter RouterResponse
-	responseRouter.Total = GetDayTotalSecondsByUser(macAddress, curr.Format("2006-01-02"), router.Id)
+	responseRouter.Total = GetDayTotalSecondsByUser(macAddress, curr, router.Id)
 	responseRouter.Name = router.Name
 	responseRouter.Description = router.Description
 
 	return responseRouter
 }
 
-// GetTimeDayAll
-// TODO: Аргумент date string -> time.Time
-func GetTimeDayAll(userId int, date string) Time {
+func GetTimeDayAll(userId int, date time.Time) Time {
 	var macAddress string
 	var telegramId int64
 	row := Db.QueryRow("SELECT u.mac_address, u.telegram_id FROM users u WHERE u.id = $1", userId)
@@ -317,7 +315,7 @@ func GetTimeDayAll(userId int, date string) Time {
 		panic(err)
 	}
 	var timeOutput Time
-	timeOutput.Date = date
+	timeOutput.Date = date.Format("2006-01-02")
 	timeOutput.Total = GetDayTotalSecondsByUser(macAddress, date, 0)
 	timeOutput.BeginTime = GetDayTimeFromTimeTable(macAddress, date, "ASC")
 	timeOutput.EndTime = GetDayTimeFromTimeTable(macAddress, date, "DESC")
@@ -325,14 +323,10 @@ func GetTimeDayAll(userId int, date string) Time {
 	timeOutput.Break = GetAllBreaksByTimesOld(times)
 
 	// Собираем routers
-	dateTimeStruct, err := time.Parse("2006-01-02", date)
-	if err != nil {
-		panic(err)
-	}
 	routers := GetAllRouters()
 	var responseRouters []RouterResponse
 	for _, router := range routers {
-		responseRouter := buildResponseRouter(router, macAddress, dateTimeStruct)
+		responseRouter := buildResponseRouter(router, macAddress, date)
 		responseRouters = append(responseRouters, responseRouter)
 	}
 	timeOutput.Routers = responseRouters
@@ -340,12 +334,11 @@ func GetTimeDayAll(userId int, date string) Time {
 	return timeOutput
 }
 
-func GetDayTotalSecondsByUser(macAddress, date string, routerId int) int64 {
+func GetDayTotalSecondsByUser(macAddress string, date time.Time, routerId int) int64 {
 	var seconds int64
 
-	dateToday, _ := time.Parse("2006-01-02", date)
 	now := time.Now()
-	if dateToday.Year() == now.Year() && dateToday.Month() == now.Month() && dateToday.Day() == now.Day() {
+	if date.Year() == now.Year() && date.Month() == now.Month() && date.Day() == now.Day() {
 		times := GetAllByDate(macAddress, date, routerId)
 		return AggregateDayTotalTime(times)
 	}
@@ -362,9 +355,9 @@ func GetDayTotalSecondsByUser(macAddress, date string, routerId int) int64 {
 	return seconds
 }
 
-func GetDayTimeFromTimeTable(macAddress string, date string, sort string) int64 {
+func GetDayTimeFromTimeTable(macAddress string, date time.Time, sort string) int64 {
 	var beginSecond int64
-	row := Db.QueryRow("SELECT t.second FROM time t WHERE t.mac_address = $1 AND t.second BETWEEN $2 AND $3 ORDER BY t.second "+sort+" LIMIT 1", macAddress, GetSecondsByBeginDate(date), GetSecondsByEndDate(date))
+	row := Db.QueryRow("SELECT t.second FROM time t WHERE t.mac_address = $1 AND t.second BETWEEN $2 AND $3 ORDER BY t.second "+sort+" LIMIT 1", macAddress, GetSecondsByBeginDate(date.Format("2006-01-02")), GetSecondsByEndDate(date.Format("2006-01-02")))
 	err := row.Scan(&beginSecond)
 
 	if err == sql.ErrNoRows {

@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"officetime-api/app/model"
 	"strconv"
+	"time"
 )
 
 var Db *sql.DB
@@ -24,7 +25,7 @@ func GetTimeDayAll(w http.ResponseWriter, r *http.Request) {
 
 	userId, _ := strconv.Atoi(user)
 
-	err := json.NewEncoder(w).Encode(model.GetTimeDayAll(userId, date))
+	err := json.NewEncoder(w).Encode(model.GetTimeDayAll(userId, buildTimeStructFromDate(date)))
 	if err != nil {
 		panic(err)
 	}
@@ -64,6 +65,15 @@ func CreateTime(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func buildTimeStructFromDate(date string) time.Time {
+	timeStruct, err := time.Parse("2006-01-02", date)
+	if err != nil {
+		panic(err)
+	}
+
+	return timeStruct
 }
 
 /*func GetAllBreaksByTimes(macAddress, date string) []*model.Break {
