@@ -31,14 +31,18 @@ func GetTimeDayAll(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// GetTimeByPeriod
-// TODO: перенести в model.GetTimeByPeriod()
 func GetTimeByPeriod(w http.ResponseWriter, r *http.Request) {
 	user := mux.Vars(r)["id"]
 	period := mux.Vars(r)["period"]
 
-	userId, _ := strconv.Atoi(user)
-	periodId, _ := strconv.Atoi(period)
+	userId, err := strconv.Atoi(user)
+	if err != nil {
+		panic(err)
+	}
+	periodId, err := strconv.Atoi(period)
+	if err != nil {
+		panic(err)
+	}
 
 	json.NewEncoder(w).Encode(model.GetTimeByPeriod(userId, periodId))
 }

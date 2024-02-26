@@ -57,6 +57,7 @@ func main() {
 	router.HandleFunc("/api-service/logout", dao.Logout).Methods("POST")
 
 	router.Handle("/metrics", promhttp.Handler())
+	router.HandleFunc("/ping", ping).Methods("GET")
 
 	router.Handle("/api-service/time/{id}/day/{date}", isAuthorized(dao.GetTimeDayAll)).Methods("GET")
 	router.Handle("/api-service/time/{id}/period/{period}", isAuthorized(dao.GetTimeByPeriod)).Methods("GET")
@@ -93,6 +94,11 @@ func main() {
 	router.Handle("/api-service/weekend", isAuthorized(dao.GetWeekend)).Methods("GET")
 
 	log.Fatal(http.ListenAndServe(":8080", c.Handler(router)))
+}
+
+func ping(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Ok"))
 }
 
 func commonMiddleware(next http.Handler) http.Handler {
