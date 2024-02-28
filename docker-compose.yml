@@ -7,8 +7,6 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8080:8080"
-    depends_on:
-      - db
     networks:
       - officetime-api-network
     healthcheck:
@@ -17,25 +15,6 @@ services:
       timeout: 10s
       retries: 5
       start_period: 5s
-  db:
-    image: postgres:16.2
-    restart: always
-    ports:
-      - "5432:5432"
-    volumes:
-      - data:/var/lib/postgresql/data
-    environment:
-      POSTGRES_DB: officetime
-      POSTGRES_USER: officetime
-      POSTGRES_PASSWORD: officetime
-    networks:
-      - officetime-api-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
 
 networks:
   officetime-api-network:

@@ -3,3 +3,8 @@ https://medium.com/axiomzenteam/combining-docker-multi-stage-builds-and-health-c
 https://github.com/tarampampam/curl-docker
 
 https://github.com/MaksimDzhangirov/backendBankExample?tab=readme-ov-file
+
+https://docs.docker.com/language/golang/build-images/
+
+Миграции
+https://copyprogramming.com/howto/how-to-run-golang-migrate-with-docker-compose#how-to-run-golang-migrate-with-docker-compose

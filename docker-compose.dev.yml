@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  app:
+    depends_on:
+      - db
+  db:
+    image: postgres:16.2
+    restart: always
+    ports:
+      - "5432:5432"
+    volumes:
+      - data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: officetime
+      POSTGRES_USER: officetime
+      POSTGRES_PASSWORD: officetime
+    networks:
+      officetime-api-network:
+        aliases:
+          - database
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+  migrate:
+    image: migrate/migrate
+    networks:
+      - officetime-api-network
+    volumes:
+      - ./db/migrations:/migrations
+    command: [ "-path", "/migrations", "-database", "postgres://officetime:officetime@database:5432/officetime?sslmode=disable", "up" ]
+    links:
+      - db
+    #depends_on:
+    # - db
