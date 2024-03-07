@@ -16,15 +16,20 @@ jobs:
                 os: [ubuntu-latest, macos-latest]
         runs-on: ${{ matrix.os }}
         steps:
-            - uses: actions/checkout@v3
-            - uses: actions/setup-go@v4
+            - name: Checkout code
+              uses: actions/checkout@v3
+
+            - name: Set up Go
+              uses: actions/setup-go@v4
               with:
                 go-version: ${{ matrix.go-version }}
+
             - name: Add config
-              run:
-                  cp ./config/config.example.yaml ./config/config.yaml
-            - run: |
-                go mod download
-                docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
-                sleep(20)
+              run: cp ./config/config.example.yaml ./config/config.yaml
+
+            - name: Start containers
+              run: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
+
+            - name: Health check
+              run: |
                 curl http://localhost:8080/ping
