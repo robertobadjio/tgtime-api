@@ -25,6 +25,6 @@ jobs:
                   cp ./config/config.example.yaml ./config/config.yaml
             - run: |
                 go mod download
-                docker-compose -f docker-compose.yml -f docker-compose.dev.yml --build up -d
+                docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
                 sleep(20)
                 curl http://localhost:8080/ping
