@@ -31,4 +31,4 @@ jobs:
               run: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
 
             - name: Health check
-              run: dockerun --network container:officetime-api-app-1 appropriate/curl -s --retry 10 --retry-connrefused http://localhost:8080/ping
+              run: docker run --network container:officetime-api-app-1 appropriate/curl -s --retry 10 --retry-connrefused http://localhost:8080/ping
