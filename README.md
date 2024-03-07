@@ -10,3 +10,5 @@ https://docs.docker.com/language/golang/build-images/
 https://copyprogramming.com/howto/how-to-run-golang-migrate-with-docker-compose#how-to-run-golang-migrate-with-docker-compose
 
 https://github.com/peter-evans/docker-compose-actions-workflow?tab=readme-ov-file
+
+https://peterevans.dev/posts/smoke-testing-containers/

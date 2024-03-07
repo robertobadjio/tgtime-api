@@ -31,4 +31,6 @@ jobs:
               run: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
 
             - name: Health check
-              run: docker run --network container:officetime-api-app appropriate/curl -s --retry 10 --retry-connrefused --retry-delay 5 --retry-max-time 30 http://localhost:8080/ping
+              run: |
+                docker-compose ps
+                docker run --network container:officetime-api-app appropriate/curl -s --retry 10 --retry-connrefused --retry-delay 5 --retry-max-time 30 http://localhost:8080/ping
