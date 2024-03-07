@@ -37,8 +37,6 @@ jobs:
 
             - name: Health check
               run: |
-                tail -100 ./config/config.yaml
                 docker logs --since=25m officetime-api-db
-                docker logs --since=25m officetime-api-app
                 docker-compose ps
                 docker run --network container:officetime-api-app appropriate/curl -s --retry 10 --retry-connrefused --retry-delay 5 --retry-max-time 30 http://localhost:8080/ping

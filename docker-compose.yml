@@ -16,8 +16,6 @@ services:
       timeout: 10s
       retries: 5
       start_period: 5s
-    depends_on:
-      - db
 
 networks:
   officetime-api-network:
