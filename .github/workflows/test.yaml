@@ -20,6 +20,9 @@ jobs:
             - uses: actions/setup-go@v4
               with:
                 go-version: ${{ matrix.go-version }}
+            - name: Add config
+              run:
+                  cp ./config/config.example.yaml ./config/config.yaml
             - run: |
                 docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
                 sleep(20)

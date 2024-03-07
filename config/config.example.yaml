@@ -1,9 +1,9 @@
 Env: 'dev'
-HostName: 'localhost'
+HostName: db
 HostPort: 5432
-DataBaseName: ''
-UserName: ''
-Password: ''
+DataBaseName: 'officetime'
+UserName: 'officetime'
+Password: 'officetime'
 SslMode: 'disable'
 BotToken: ''
 RouterAddress: ''
@@ -12,7 +12,7 @@ RouterPassword: ''
 webHookPath: ''
 TelegramBot: ''
 
-AuthSigningKey: ''
+AuthSigningKey: 'OfficeTimeTech'
 AuthRefreshKey: ''
 AuthAccessTokenExpires: 30 # minutes
 AuthRefreshTokenExpires: 168 # hours
