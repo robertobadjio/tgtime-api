@@ -1,9 +1,14 @@
 package config
 
 import (
+	"github.com/joho/godotenv"
+	"log"
 	"os"
+	"regexp"
 	"strconv"
 )
+
+const projectDirName = "officetime-api"
 
 type Config struct {
 	DataBaseHost            string
@@ -16,6 +21,10 @@ type Config struct {
 	AuthRefreshKey          string
 	AuthAccessTokenExpires  int
 	AuthRefreshTokenExpires int
+}
+
+func init() {
+	loadEnv()
 }
 
 func New() *Config {
@@ -48,4 +57,15 @@ func getEnvInt(name string, defaultVal int) int {
 	}
 
 	return defaultVal
+}
+
+func loadEnv() {
+	re := regexp.MustCompile(`^(.*` + projectDirName + `)`)
+	cwd, _ := os.Getwd()
+	rootPath := re.Find([]byte(cwd))
+
+	err := godotenv.Load(string(rootPath) + `/.env`)
+	if err != nil {
+		log.Fatal("Problem loading .env file")
+	}
 }

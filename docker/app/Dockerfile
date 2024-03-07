@@ -7,6 +7,7 @@ RUN go mod download
 
 COPY ../../cmd/officetime-api/main.go ./
 COPY ../../app app
+COPY ../../.env /
 
 RUN CGO_ENABLED=0 GOOS=linux go build -o /officetime-api
 
@@ -14,6 +15,7 @@ FROM scratch
 
 COPY --from=build /officetime-api .
 COPY --from=ghcr.io/tarampampam/curl:8.6.0 /bin/curl /bin/curl
+COPY --from=build /.env .
 
 EXPOSE 8080
 
