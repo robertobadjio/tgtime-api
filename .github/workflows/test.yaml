@@ -21,6 +21,6 @@ jobs:
               with:
                 go-version: ${{ matrix.go-version }}
             - run: |
-                docker compose -f docker-compose.yml -f docker-compose.dev.yml
+                docker-compose -f docker-compose.yml -f docker-compose.dev.yml
                 sleep(20)
                 curl http://localhost:8080/ping
