@@ -31,5 +31,5 @@ up-recreate:
 down: ## Down services
 	$(DOCKER_COMPOSE) down
 
-clean: ## Delete all containers and volumes
+clean: ## Delete all containers
 	$(DOCKER_COMPOSE) down --remove-orphans
