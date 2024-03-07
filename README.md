@@ -8,3 +8,5 @@ https://docs.docker.com/language/golang/build-images/
 
 Миграции
 https://copyprogramming.com/howto/how-to-run-golang-migrate-with-docker-compose#how-to-run-golang-migrate-with-docker-compose
+
+https://github.com/peter-evans/docker-compose-actions-workflow?tab=readme-ov-file
