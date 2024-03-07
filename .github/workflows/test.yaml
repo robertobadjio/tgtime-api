@@ -25,7 +25,9 @@ jobs:
                 go-version: ${{ matrix.go-version }}
 
             - name: Add config
-              run: cp ./config/config.example.yaml ./config/config.yaml
+              run: |
+                cp ./config/config.example.yaml ./config/config.yaml
+                cp ./.example.env ./.env
 
             - name: Build containers
               run: docker-compose -f docker-compose.yml -f docker-compose.prod.yml build
