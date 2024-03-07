@@ -28,7 +28,7 @@ jobs:
               run: cp ./config/config.example.yaml ./config/config.yaml
 
             - name: Start containers
-              run: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
+              run: docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 
             - name: Health check
               run: |
