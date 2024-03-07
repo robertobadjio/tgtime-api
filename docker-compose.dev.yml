@@ -6,6 +6,7 @@ services:
       - db
   db:
     image: postgres:16.2
+    container_name: officetime-api-db
     restart: always
     ports:
       - "5432:5432"
@@ -17,22 +18,20 @@ services:
       POSTGRES_PASSWORD: officetime
     networks:
       officetime-api-network:
-        aliases:
-          - db
+        #aliases:
+        #  - database
     healthcheck:
       test: ["CMD-SHELL", "pg_isready"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 10s
-  migrate:
-    image: migrate/migrate
-    networks:
-      - officetime-api-network
-    volumes:
-      - ./db/migrations:/migrations
-    command: [ "-path", "/migrations", "-db", "postgres://officetime:officetime@database:5432/officetime?sslmode=disable", "up" ]
-    links:
-      - db
-    #depends_on:
-    # - db
+  #migrate:
+    #image: migrate/migrate
+    #networks:
+    #  - officetime-api-network
+    #volumes:
+    #  - ./db/migrations:/migrations
+    #command: ["-path", "/migrations", "-database", "postgres://officetime:officetime@database:5432/officetime?sslmode=disable", "up"]
+    #links:
+    #  - db
