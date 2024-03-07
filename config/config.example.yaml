@@ -10,9 +10,9 @@ RouterAddress: ''
 RouterUserName: ''
 RouterPassword: ''
 webHookPath: ''
-TelegramBot: ''
+TelegramBot: 'OfficeTimeTech'
 
-AuthSigningKey: 'OfficeTimeTech'
+AuthSigningKey: ''
 AuthRefreshKey: ''
 AuthAccessTokenExpires: 30 # minutes
 AuthRefreshTokenExpires: 168 # hours

@@ -18,9 +18,9 @@ services:
     networks:
       officetime-api-network:
         aliases:
-          - database
+          - db
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready" ]
+      test: ["CMD-SHELL", "pg_isready"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -31,7 +31,7 @@ services:
       - officetime-api-network
     volumes:
       - ./db/migrations:/migrations
-    command: [ "-path", "/migrations", "-database", "postgres://officetime:officetime@database:5432/officetime?sslmode=disable", "up" ]
+    command: [ "-path", "/migrations", "-db", "postgres://officetime:officetime@database:5432/officetime?sslmode=disable", "up" ]
     links:
       - db
     #depends_on:
