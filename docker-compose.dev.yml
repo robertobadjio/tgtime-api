@@ -17,7 +17,7 @@ services:
       POSTGRES_USER: officetime
       POSTGRES_PASSWORD: officetime
     networks:
-      officetime-api-network:
+      - officetime-api-network
         #aliases:
         #  - database
     healthcheck:
