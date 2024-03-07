@@ -12,3 +12,6 @@ https://copyprogramming.com/howto/how-to-run-golang-migrate-with-docker-compose#
 https://github.com/peter-evans/docker-compose-actions-workflow?tab=readme-ov-file
 
 https://peterevans.dev/posts/smoke-testing-containers/
+https://github.com/mvdan/github-actions-golang
+https://habr.com/ru/companies/otus/articles/650435/
+https://habr.com/ru/articles/595627/
