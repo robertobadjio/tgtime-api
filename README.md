@@ -15,3 +15,4 @@ https://peterevans.dev/posts/smoke-testing-containers/
 https://github.com/mvdan/github-actions-golang
 https://habr.com/ru/companies/otus/articles/650435/
 https://habr.com/ru/articles/595627/
+https://stackoverflow.com/questions/76488238/running-docker-and-github-actions-error-command-not-found
