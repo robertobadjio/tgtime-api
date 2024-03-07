@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"flag"
 	"fmt"
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
@@ -21,22 +20,7 @@ import (
 
 var db *sql.DB
 
-// Global secret key
-var mySigningKey = []byte(config.Config.AuthSigningKey)
-
 func main() {
-	var configPath string
-	flag.StringVar(&configPath, "config", "", "The config name param")
-	flag.Parse()
-
-	if configPath == "" {
-		fmt.Println("Param 'config' must be set")
-		return
-	}
-	if err := config.LoadConfig(configPath); err != nil {
-		panic(fmt.Errorf("Invalid application configuration: %s", err))
-	}
-
 	db = getDB()
 	dao.Db = db
 	model.Db = db
@@ -124,9 +108,16 @@ func every12Day() {
 }
 
 func getDB() *sql.DB {
-	pgConString := fmt.Sprintf("host=%s port=%d user=%s "+
-		"password=%s dbname=%s sslmode=%s",
-		config.Config.HostName, config.Config.HostPort, config.Config.UserName, config.Config.Password, config.Config.DataBaseName, config.Config.SslMode)
+	cfg := config.New()
+	pgConString := fmt.Sprintf(
+		"host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
+		cfg.DataBaseHost,
+		cfg.DataBasePort,
+		cfg.DataBaseUser,
+		cfg.DataBasePassword,
+		cfg.DataBaseName,
+		cfg.DataBaseSslMode,
+	)
 
 	db, err := sql.Open("postgres", pgConString)
 
@@ -142,13 +133,14 @@ func getDB() *sql.DB {
 }
 
 func isAuthorized(endpoint func(http.ResponseWriter, *http.Request)) http.Handler {
+	cfg := config.New()
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Header["Token"] != nil {
 			token, err := jwt.Parse(r.Header["Token"][0], func(token *jwt.Token) (interface{}, error) {
 				if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 					return nil, fmt.Errorf("There was an error")
 				}
-				return mySigningKey, nil
+				return []byte(cfg.AuthSigningKey), nil
 			})
 
 			if err != nil {

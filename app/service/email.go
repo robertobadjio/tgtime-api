@@ -3,7 +3,6 @@ package service
 import (
 	"log"
 	"net/smtp"
-	"officetime-api/app/config"
 )
 
 func SendEmail(name, email, password string) {
@@ -15,7 +14,7 @@ func SendEmail(name, email, password string) {
 	msg := []byte("To: " + email + "\r\n" +
 		"Subject: Регистрация на OfficeTime\r\n" +
 		"Добро пожаловать " + name + "! Ваш пароль: " + password + "\r\n\r\n" +
-		"Для начала работы напишите '/start' телеграм-боту @" + config.Config.TelegramBot)
+		"Для начала работы напишите '/start' телеграм-боту @OfficeTimeTech")
 	err := smtp.SendMail("smtp.timeweb.ru:25", auth, "info@officetime.tech", to, msg)
 	if err != nil {
 		log.Fatal(err)

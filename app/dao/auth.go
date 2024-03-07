@@ -39,12 +39,12 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 	// TODO: сделать разлогин через BlackWhite lists
 }
 
-var refreshSecretKey = []byte(config.Config.AuthRefreshKey)
-
 func Login(w http.ResponseWriter, r *http.Request) {
+	cfg := config.New()
+
 	td := &TokenDetails{}
-	td.AccessTokenExpires = time.Now().Add(time.Minute * time.Duration(config.Config.AuthAccessTokenExpires)).Unix()
-	td.RefreshTokenExpires = time.Now().Add(time.Hour * time.Duration(config.Config.AuthRefreshTokenExpires)).Unix()
+	td.AccessTokenExpires = time.Now().Add(time.Minute * time.Duration(cfg.AuthAccessTokenExpires)).Unix()
+	td.RefreshTokenExpires = time.Now().Add(time.Hour * time.Duration(cfg.AuthRefreshTokenExpires)).Unix()
 
 	reqBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -73,6 +73,8 @@ func Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func Refresh(w http.ResponseWriter, r *http.Request) {
+	cfg := config.New()
+
 	reqBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		panic(err)
@@ -90,7 +92,7 @@ func Refresh(w http.ResponseWriter, r *http.Request) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
-		return refreshSecretKey, nil
+		return []byte(cfg.AuthRefreshKey), nil
 	})
 
 	w.Header().Set("Content-Type", "application/json")

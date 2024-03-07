@@ -11,10 +11,6 @@ import (
 	"time"
 )
 
-// Global secret key
-var mySigningKey = []byte(config.Config.AuthSigningKey)
-var refreshSecretKey = []byte(config.Config.AuthRefreshKey)
-
 type AccessDetails struct {
 	UserId uint64
 	Role   string
@@ -32,9 +28,10 @@ type TokenDetails struct {
 }
 
 func CreateTokenPair(user *model.User) *TokenDetails {
+	cfg := config.New()
 	td := &TokenDetails{}
-	td.AccessTokenExpires = time.Now().Add(time.Minute * time.Duration(config.Config.AuthAccessTokenExpires)).Unix()
-	td.RefreshTokenExpires = time.Now().Add(time.Hour * time.Duration(config.Config.AuthRefreshTokenExpires)).Unix()
+	td.AccessTokenExpires = time.Now().Add(time.Minute * time.Duration(cfg.AuthAccessTokenExpires)).Unix()
+	td.RefreshTokenExpires = time.Now().Add(time.Hour * time.Duration(cfg.AuthRefreshTokenExpires)).Unix()
 
 	// Создаем новый токен
 	token := jwt.New(jwt.SigningMethodHS256)
@@ -55,7 +52,7 @@ func CreateTokenPair(user *model.User) *TokenDetails {
 
 	// Подписываем токен нашим секретным ключем
 	var err error
-	td.AccessToken, err = token.SignedString(mySigningKey)
+	td.AccessToken, err = token.SignedString([]byte(cfg.AuthSigningKey))
 	if err != nil {
 		panic(err)
 	}
@@ -65,7 +62,7 @@ func CreateTokenPair(user *model.User) *TokenDetails {
 	refreshTokenClaims["userId"] = user.Id
 	refreshTokenClaims["exp"] = td.RefreshTokenExpires
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshTokenClaims)
-	td.RefreshToken, err = refreshToken.SignedString(refreshSecretKey)
+	td.RefreshToken, err = refreshToken.SignedString([]byte(cfg.AuthRefreshKey))
 	if err != nil {
 		panic(err)
 	}
@@ -74,6 +71,7 @@ func CreateTokenPair(user *model.User) *TokenDetails {
 }
 
 func VerifyToken(r *http.Request) (*jwt.Token, error) {
+	cfg := config.New()
 	tokenString := extractToken(r)
 
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
@@ -82,7 +80,7 @@ func VerifyToken(r *http.Request) (*jwt.Token, error) {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
 
-		return mySigningKey, nil
+		return []byte(cfg.AuthSigningKey), nil
 	})
 
 	if err != nil {

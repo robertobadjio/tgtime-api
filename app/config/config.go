@@ -1,43 +1,51 @@
 package config
 
 import (
-	"fmt"
-	"github.com/spf13/viper"
+	"os"
+	"strconv"
 )
 
-var Config appConfig
-
-type appConfig struct {
-	Env                     string
-	HostName                string
-	HostPort                int
-	UserName                string
-	Password                string
+type Config struct {
+	DataBaseHost            string
+	DataBasePort            int
 	DataBaseName            string
-	SslMode                 string
-	BotToken                string
-	RouterAddress           string
-	RouterUserName          string
-	RouterPassword          string
-	WebHookPath             string
-	TelegramBot             string
+	DataBaseUser            string
+	DataBasePassword        string
+	DataBaseSslMode         string
 	AuthSigningKey          string
 	AuthRefreshKey          string
 	AuthAccessTokenExpires  int
 	AuthRefreshTokenExpires int
 }
 
-func LoadConfig(configPaths ...string) error {
-	v := viper.New()
-	v.SetConfigName("config")
-	v.SetConfigType("yaml")
-	v.SetEnvPrefix("officetime")
-	v.AutomaticEnv()
-	for _, path := range configPaths {
-		v.AddConfigPath(path)
+func New() *Config {
+	return &Config{
+		DataBaseHost:            getEnv("DATABASE_HOST", ""),
+		DataBasePort:            getEnvInt("DATABASE_PORT", 0),
+		DataBaseName:            getEnv("DATABASE_NAME", ""),
+		DataBaseUser:            getEnv("DATABASE_USER", ""),
+		DataBasePassword:        getEnv("DATABASE_PASSWORD", ""),
+		DataBaseSslMode:         getEnv("DATABASE_SSL_MODE", ""),
+		AuthSigningKey:          getEnv("AUTH_SIGNING_KEY", ""),
+		AuthRefreshKey:          getEnv("AUTH_REFRESH_KEY", ""),
+		AuthAccessTokenExpires:  getEnvInt("AUTH_ACCESS_TOKEN_EXPIRES", 0),
+		AuthRefreshTokenExpires: getEnvInt("AUTH_REFRESH_TOKEN_EXPIRES", 0),
 	}
-	if err := v.ReadInConfig(); err != nil {
-		return fmt.Errorf("failed to read the configuration file: %s", err)
+}
+
+func getEnv(key string, defaultVal string) string {
+	if value, exists := os.LookupEnv(key); exists {
+		return value
 	}
-	return v.Unmarshal(&Config)
+
+	return defaultVal
+}
+
+func getEnvInt(name string, defaultVal int) int {
+	valueStr := getEnv(name, "")
+	if value, err := strconv.Atoi(valueStr); err == nil {
+		return value
+	}
+
+	return defaultVal
 }
