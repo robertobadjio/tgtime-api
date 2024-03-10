@@ -21,6 +21,7 @@ import (
 var db *sql.DB
 
 func main() {
+	cfg := config.New()
 	db = getDB()
 	dao.Db = db
 	model.Db = db
@@ -77,7 +78,7 @@ func main() {
 
 	router.Handle("/api-service/weekend", isAuthorized(dao.GetWeekend)).Methods("GET")
 
-	log.Fatal(http.ListenAndServe(":8080", c.Handler(router)))
+	log.Fatal(http.ListenAndServe(":"+cfg.HttpPort, c.Handler(router)))
 }
 
 func ping(w http.ResponseWriter, r *http.Request) {

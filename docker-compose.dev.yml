@@ -13,13 +13,13 @@ services:
     container_name: officetime-api-db
     restart: always
     ports:
-      - "5432:5432"
+      - ${DATABASE_PORT}:${DATABASE_PORT}
     volumes:
       - data:/var/lib/postgresql/data
     environment:
-      POSTGRES_DB: officetime
-      POSTGRES_USER: officetime
-      POSTGRES_PASSWORD: officetime
+      POSTGRES_DB: ${DATABASE_NAME}
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
     networks:
       officetime-api-network:
         aliases:
@@ -36,6 +36,6 @@ services:
       - officetime-api-network
     volumes:
       - ./db/migrations:/migrations
-    command: ["-path", "/migrations", "-database", "postgres://officetime:officetime@database:5432/officetime?sslmode=disable", "up"]
+    command: ["-path", "/migrations", "-database", "postgres://$${DATABASE_USER}:$${DATABASE_PASSWORD}@database:$${DATABASE_PORT}/$${DATABASE_NAME}?sslmode=$${DATABASE_SSL_MODE}", "up"]
     links:
       - db

@@ -25,9 +25,6 @@ up: ## Start services
 build: ## Build service containers
 	$(DOCKER_COMPOSE) build
 
-up-recreate:
-	$(DOCKER_COMPOSE) up --force-recreate -d
-
 down: ## Down services
 	$(DOCKER_COMPOSE) down
 

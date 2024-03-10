@@ -7,11 +7,11 @@ services:
       dockerfile: ./docker/app/Dockerfile
     container_name: officetime-api-app
     ports:
-      - "8080:8080"
+      - ${HTTP_PORT}:${HTTP_PORT}
     networks:
       - officetime-api-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/ping"]
+      test: ["CMD", "curl", "-f", "http://localhost:$${HTTP_PORT}/ping"]
       interval: 20s
       timeout: 10s
       retries: 5
