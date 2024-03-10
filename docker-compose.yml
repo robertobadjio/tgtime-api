@@ -6,16 +6,18 @@ services:
       context: .
       dockerfile: ./docker/app/Dockerfile
     container_name: officetime-api-app
+    environment:
+      - EXPOSE_PORT=${HTTP_PORT}
     ports:
       - ${HTTP_PORT}:${HTTP_PORT}
     networks:
       - officetime-api-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:$${HTTP_PORT}/ping"]
-      interval: 20s
+      test: ["CMD", "curl", "-f", "http://localhost:${HTTP_PORT}/service/status"]
+      interval: 10s
       timeout: 10s
       retries: 5
-      start_period: 5s
+      start_period: 1s
 
 networks:
   officetime-api-network:

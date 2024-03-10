@@ -13,7 +13,7 @@ const projectDirName = "officetime-api"
 type Config struct {
 	HttpPort                string
 	DataBaseHost            string
-	DataBasePort            int
+	DataBasePort            string
 	DataBaseName            string
 	DataBaseUser            string
 	DataBasePassword        string
@@ -32,7 +32,7 @@ func New() *Config {
 	return &Config{
 		HttpPort:                getEnv("HTTP_PORT", "8080"),
 		DataBaseHost:            getEnv("DATABASE_HOST", ""),
-		DataBasePort:            getEnvInt("DATABASE_PORT", 5432),
+		DataBasePort:            getEnv("DATABASE_PORT", "5432"),
 		DataBaseName:            getEnv("DATABASE_NAME", ""),
 		DataBaseUser:            getEnv("DATABASE_USER", ""),
 		DataBasePassword:        getEnv("DATABASE_PASSWORD", ""),

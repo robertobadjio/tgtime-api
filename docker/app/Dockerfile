@@ -5,8 +5,10 @@ WORKDIR /app
 COPY ../../go.mod go.sum ./
 RUN go mod download
 
-COPY ../../cmd/officetime-api/main.go ./
+COPY ../../cmd/officetime-api/api.go ./
 COPY ../../app app
+COPY ../../pkg pkg
+COPY ../../internal internal
 COPY ../../.env /
 
 RUN CGO_ENABLED=0 GOOS=linux go build -o /officetime-api
@@ -17,6 +19,8 @@ COPY --from=build /officetime-api .
 COPY --from=ghcr.io/tarampampam/curl:8.6.0 /bin/curl /bin/curl
 COPY --from=build /.env .
 
-EXPOSE 8080
+ENV EXPOSE_PORT=$EXPOSE_PORT
 
-CMD ["/officetime-api", "--config", "config"]
+EXPOSE $EXPOSE_PORT
+
+CMD ["/officetime-api"]

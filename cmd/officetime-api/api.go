@@ -4,10 +4,14 @@ import (
 	"database/sql"
 	"fmt"
 	jwt "github.com/dgrijalva/jwt-go"
+	"net"
+	"officetime-api/pkg/api"
+	"officetime-api/pkg/api/endpoints"
+	"officetime-api/pkg/api/transport"
+	"os"
+
+	//"github.com/go-kit/kit/log"
 	"github.com/gorilla/mux"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/rs/cors"
-	"log"
 	"net/http"
 	"officetime-api/app/aggregator"
 	"officetime-api/app/config"
@@ -28,13 +32,38 @@ func main() {
 	aggregator.Db = db
 	go every12Day()
 
-	fmt.Println("Setting up server, enabling CORS...")
+	/*fmt.Println("Setting up server, enabling CORS...")
 	c := cors.New(cors.Options{
 		AllowedOrigins: []string{"*"},                    // All origins
 		AllowedMethods: []string{"GET", "POST", "PATCH"}, // Allowing only get, just an example
-	})
+	})*/
 
-	router := mux.NewRouter().StrictSlash(true)
+	var (
+		//logger   log.Logger
+		httpAddr = net.JoinHostPort("", cfg.HttpPort)
+	)
+
+	//logger = log.NewLogfmtLogger(log.NewSyncWriter(os.Stderr))
+	//logger = log.With(logger, "ts", log.DefaultTimestampUTC)
+
+	var (
+		s           = api.NewService()
+		eps         = endpoints.NewEndpointSet(s)
+		httpHandler = transport.NewHTTPHandler(eps)
+	)
+
+	httpListener, err := net.Listen("tcp", httpAddr)
+	if err != nil {
+		fmt.Println(err)
+		//logger.Log("transport", "HTTP", "during", "Listen", "err", err)
+		os.Exit(1)
+	}
+	err = http.Serve(httpListener, httpHandler)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
+	/*router := mux.NewRouter().StrictSlash(true)
 	router.Use(commonMiddleware)
 
 	router.HandleFunc("/api-service/login", dao.Login).Methods("POST")
@@ -42,7 +71,6 @@ func main() {
 	router.HandleFunc("/api-service/logout", dao.Logout).Methods("POST")
 
 	router.Handle("/metrics", promhttp.Handler())
-	router.HandleFunc("/ping", ping).Methods("GET")
 
 	router.Handle("/api-service/time/{id}/day/{date}", isAuthorized(dao.GetTimeDayAll)).Methods("GET")
 	router.Handle("/api-service/time/{id}/period/{period}", isAuthorized(dao.GetTimeByPeriod)).Methods("GET")
@@ -67,7 +95,6 @@ func main() {
 	router.Handle("/api-service/department/{id}", isAuthorized(dao.DeleteDepartment)).Methods("DELETE")
 
 	router.Handle("/api-service/router/{id}", isAuthorized(dao.GetRouter)).Methods("GET")
-	router.Handle("/api-service/router", isAuthorized(dao.GetAllRouters)).Methods("GET")
 	router.Handle("/api-service/router", isAuthorized(dao.CreateRouter)).Methods("POST")
 	router.Handle("/api-service/router/{id}", isAuthorized(dao.UpdateRouter)).Methods("PATCH")
 	router.Handle("/api-service/router/{id}", isAuthorized(dao.DeleteRouter)).Methods("DELETE")
@@ -78,12 +105,7 @@ func main() {
 
 	router.Handle("/api-service/weekend", isAuthorized(dao.GetWeekend)).Methods("GET")
 
-	log.Fatal(http.ListenAndServe(":"+cfg.HttpPort, c.Handler(router)))
-}
-
-func ping(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Ok"))
+	log.Fatal(http.ListenAndServe(":"+cfg.HttpPort, c.Handler(router)))*/
 }
 
 func commonMiddleware(next http.Handler) http.Handler {
@@ -111,7 +133,7 @@ func every12Day() {
 func getDB() *sql.DB {
 	cfg := config.New()
 	pgConString := fmt.Sprintf(
-		"host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
+		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
 		cfg.DataBaseHost,
 		cfg.DataBasePort,
 		cfg.DataBaseUser,
