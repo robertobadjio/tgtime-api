@@ -28,6 +28,7 @@ jobs:
               run: |
                 touch ./.env
                 echo ENV="dev" >> .env
+                echo HTTP_HOST=8081 >> .env
                 echo DATABASE_HOST="db" >> .env
                 echo DATABASE_PORT="5432" >> .env
                 echo DATABASE_NAME="officetime" >> .env
