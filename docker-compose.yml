@@ -10,6 +10,7 @@ services:
       - EXPOSE_PORT=${HTTP_PORT}
     ports:
       - ${HTTP_PORT}:${HTTP_PORT}
+      - ${GRPC_PORT}:${GRPC_PORT}
     networks:
       - officetime-api-network
     healthcheck:

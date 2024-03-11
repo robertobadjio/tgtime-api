@@ -1,47 +1,61 @@
 package transport
 
 import (
+	"context"
+	"errors"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
+	"officetime-api/api/v1/pb/api"
+	"officetime-api/pkg/api/endpoints"
 )
 
-type GrpcServer struct {
-	router grpctransport.Handler
+type grpcServer struct {
+	getRouters grpctransport.Handler
+	api.UnimplementedApiServer
 }
 
-/*func NewGRPCServer(ep endpoints.Set) *GrpcServer {
-	return &GrpcServer{
-		router: grpctransport.NewServer(
-			ep.RouterEndpoint,
-			decodeGRPCRouterRequest,
-			decodeGRPCRouterResponse,
+func NewGRPCServer(endpoints endpoints.Set) api.ApiServer {
+	return &grpcServer{
+		getRouters: grpctransport.NewServer(
+			endpoints.GetRoutersEndpoint,
+			decodeGRPCGetRoutersRequest,
+			encodeGRPCGetRoutersResponse,
 		),
 	}
 }
 
-func (g *GrpcServer) Get(ctx context.Context, r endpoints.RouterRequest) (*api.GetReply, error) {
-	_, rep, err := g.router.ServeGRPC(ctx, r)
+func (g *grpcServer) GetRouters(ctx context.Context, request *api.GetRoutersRequest) (*api.GetRoutersResponse, error) {
+	_, response, err := g.getRouters.ServeGRPC(ctx, request)
 	if err != nil {
 		return nil, err
 	}
-	return rep.(*watermark.GetReply), nil
+	return response.(*api.GetRoutersResponse), nil
 }
 
-func decodeGRPCRouterRequest(_ context.Context) (interface{}, error) {
-	return endpoints.RouterRequest{}, nil
+func decodeGRPCGetRoutersRequest(_ context.Context, grpcRequest interface{}) (interface{}, error) {
+	_ = grpcRequest.(*api.GetRoutersRequest)
+	return endpoints.GetRoutersRequest{}, nil
 }
 
-func decodeGRPCRouterResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
-	reply := grpcReply.(*watermark.GetReply)
-	var docs []internal.Document
-	for _, d := range reply.Documents {
-		doc := internal.Document{
-			Content:   d.Content,
-			Title:     d.Title,
-			Author:    d.Author,
-			Topic:     d.Topic,
-			Watermark: d.Watermark,
-		}
-		docs = append(docs, doc)
+func encodeGRPCGetRoutersResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
+	resp, ok := grpcResponse.(endpoints.GetRoutersResponse)
+	if !ok {
+		return nil, errors.New("invalid response body")
 	}
-	return endpoints.GetResponse{Documents: docs, Err: reply.Err}, nil
-}*/
+
+	var routers []*api.Router
+	for _, r := range resp.Routers {
+		router := api.Router{
+			Id:          int64(r.Id),
+			Name:        r.Name,
+			Description: r.Description,
+			Address:     r.Address,
+			Login:       r.Login,
+			Password:    r.Password,
+			Status:      r.Status,
+			WorkTime:    r.WorkTime,
+		}
+		routers = append(routers, &router)
+	}
+
+	return &api.GetRoutersResponse{Routers: routers}, nil
+}

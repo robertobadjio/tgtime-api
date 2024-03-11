@@ -1,0 +1,26 @@
+syntax = 'proto3';
+
+package pb;
+
+option go_package = "./api";
+
+service Api {
+  rpc GetRouters (GetRoutersRequest) returns (GetRoutersResponse) {}
+}
+
+message Router {
+  int64 id = 1;
+  string name = 2;
+  string description = 3;
+  string address = 4;
+  string login = 5;
+  string password = 6;
+  bool status = 7;
+  bool workTime = 8;
+}
+
+message GetRoutersRequest {}
+
+message GetRoutersResponse {
+  repeated Router routers = 1;
+}

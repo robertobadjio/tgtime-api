@@ -4,14 +4,21 @@ import (
 	"database/sql"
 	"fmt"
 	jwt "github.com/dgrijalva/jwt-go"
+	kitgrpc "github.com/go-kit/kit/transport/grpc"
+	"google.golang.org/grpc"
+	"log"
 	"net"
+	pb "officetime-api/api/v1/pb/api"
 	"officetime-api/pkg/api"
 	"officetime-api/pkg/api/endpoints"
 	"officetime-api/pkg/api/transport"
 	"os"
+	"os/signal"
+	"syscall"
 
 	//"github.com/go-kit/kit/log"
 	"github.com/gorilla/mux"
+	"github.com/oklog/oklog/pkg/group"
 	"net/http"
 	"officetime-api/app/aggregator"
 	"officetime-api/app/config"
@@ -41,6 +48,7 @@ func main() {
 	var (
 		//logger   log.Logger
 		httpAddr = net.JoinHostPort("", cfg.HttpPort)
+		grpcAddr = net.JoinHostPort("", cfg.GrpcPort)
 	)
 
 	//logger = log.NewLogfmtLogger(log.NewSyncWriter(os.Stderr))
@@ -50,9 +58,11 @@ func main() {
 		s           = api.NewService()
 		eps         = endpoints.NewEndpointSet(s)
 		httpHandler = transport.NewHTTPHandler(eps)
+		grpcServer  = transport.NewGRPCServer(eps)
 	)
 
-	httpListener, err := net.Listen("tcp", httpAddr)
+	// http
+	/*httpListener, err := net.Listen("tcp", httpAddr)
 	if err != nil {
 		fmt.Println(err)
 		//logger.Log("transport", "HTTP", "during", "Listen", "err", err)
@@ -61,6 +71,71 @@ func main() {
 	err = http.Serve(httpListener, httpHandler)
 	if err != nil {
 		fmt.Println(err.Error())
+	}
+
+	// grpc
+	grpcListener, err := net.Listen("tcp", grpcAddr)
+	if err != nil {
+		fmt.Println("transport", "gRPC", "during", "Listen", "err", err)
+		os.Exit(1)
+	}
+
+	fmt.Println("transport", "gRPC", "addr", grpcAddr)
+	baseServer := grpc.NewServer(grpc.UnaryInterceptor(kitgrpc.Interceptor))
+	pb.RegisterApiServer(baseServer, grpcServer)
+	err = baseServer.Serve(grpcListener)
+	if err != nil {
+		fmt.Println(err.Error())
+	}*/
+
+	// API Gateway
+	var g group.Group
+	{
+		// The HTTP listener mounts the Go kit HTTP handler we created.
+		httpListener, err := net.Listen("tcp", httpAddr)
+		if err != nil {
+			log.Fatal(err)
+		}
+		g.Add(func() error {
+			log.Printf("Serving http address %s", httpAddr)
+			return http.Serve(httpListener, httpHandler)
+		}, func(err error) {
+			httpListener.Close()
+		})
+	}
+	{
+		// The gRPC listener mounts the Go kit gRPC server we created.
+		grpcListener, err := net.Listen("tcp", grpcAddr)
+		if err != nil {
+			log.Fatal(err)
+		}
+		g.Add(func() error {
+			log.Printf("Serving grpc address %s", grpcAddr)
+			baseServer := grpc.NewServer(grpc.UnaryInterceptor(kitgrpc.Interceptor))
+			pb.RegisterApiServer(baseServer, grpcServer)
+			return baseServer.Serve(grpcListener)
+		}, func(error) {
+			grpcListener.Close()
+		})
+	}
+	{
+		// This function just sits and waits for ctrl-C.
+		cancelInterrupt := make(chan struct{})
+		g.Add(func() error {
+			c := make(chan os.Signal, 1)
+			signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
+			select {
+			case sig := <-c:
+				return fmt.Errorf("received signal %s", sig)
+			case <-cancelInterrupt:
+				return nil
+			}
+		}, func(error) {
+			close(cancelInterrupt)
+		})
+	}
+	if err := g.Run(); err != nil {
+		log.Fatal(err)
 	}
 
 	/*router := mux.NewRouter().StrictSlash(true)

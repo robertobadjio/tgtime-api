@@ -30,3 +30,7 @@ down: ## Down services
 
 clean: ## Delete all containers
 	$(DOCKER_COMPOSE) down --remove-orphans
+
+protoc-build: ## Generate pb.go files
+	#protoc --proto_path=api/v1/pb/api --go_out=api/v1/pb/api --go_opt=paths=source_relative --go-grpc_out=require_unimplemented_servers=false:api/v1/pb/api --go-grpc_opt=paths=source_relative apisvc.proto
+	protoc --proto_path=api/v1/pb/api --go_out=api/v1/pb/api --go_opt=paths=source_relative --go-grpc_out=api/v1/pb/api --go-grpc_opt=paths=source_relative apisvc.proto
