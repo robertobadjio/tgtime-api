@@ -1,4 +1,4 @@
-package command
+package command_query
 
 import (
 	"context"
@@ -10,7 +10,7 @@ type CreateRouter struct {
 	Router *router.Router
 }
 
-type CreateRouterHandler decorator.CommandHandler[CreateRouter]
+type CreateRouterHandler decorator.CommandQueryHandler[CreateRouter, *router.Router]
 
 type createRouterHandler struct {
 	routerRepository router.Repository
@@ -21,16 +21,16 @@ func NewCreateRouterHandler(routerRepository router.Repository) CreateRouterHand
 		panic("nil routerRepository")
 	}
 
-	return decorator.ApplyCommandDecorators[CreateRouter](
+	return decorator.ApplyCommandQueryDecorators[CreateRouter, *router.Router](
 		createRouterHandler{routerRepository: routerRepository},
 	)
 }
 
-func (h createRouterHandler) Handle(ctx context.Context, cmd CreateRouter) error {
-	_, err := h.routerRepository.CreateRouter(ctx, cmd.Router) // TODO: !
+func (h createRouterHandler) Handle(ctx context.Context, cmdQr CreateRouter) (*router.Router, error) {
+	routerNew, err := h.routerRepository.CreateRouter(ctx, cmdQr.Router)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return routerNew, nil
 }

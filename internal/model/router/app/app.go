@@ -2,6 +2,7 @@ package app
 
 import (
 	"officetime-api/internal/model/router/app/command"
+	"officetime-api/internal/model/router/app/command_query"
 	"officetime-api/internal/model/router/app/query"
 )
 
@@ -11,7 +12,7 @@ type Application struct {
 }
 
 type Commands struct {
-	CreateRouter command.CreateRouterHandler
+	CreateRouter command_query.CreateRouterHandler
 	UpdateRouter command.UpdateRouterHandler
 	DeleteRouter command.DeleteRouterHandler
 }

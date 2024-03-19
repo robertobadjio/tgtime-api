@@ -4,10 +4,10 @@ import (
 	"context"
 )
 
-func ApplyCommandQueryDecorators[H any](handler CommandQueryHandler[H]) CommandQueryHandler[H] {
+func ApplyCommandQueryDecorators[H any, R any](handler CommandQueryHandler[H, R]) CommandQueryHandler[H, R] {
 	return handler
 }
 
-type CommandQueryHandler[C any] interface {
-	Handle(ctx context.Context, cmd C) error
+type CommandQueryHandler[CQ any, R any] interface {
+	Handle(ctx context.Context, cmdQr CQ) (R, error)
 }

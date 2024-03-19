@@ -7,5 +7,5 @@ func ApplyQueryDecorators[H any, R any](handler QueryHandler[H, R]) QueryHandler
 }
 
 type QueryHandler[Q any, R any] interface {
-	Handle(ctx context.Context, q Q) (R, error)
+	Handle(ctx context.Context, qr Q) (R, error)
 }

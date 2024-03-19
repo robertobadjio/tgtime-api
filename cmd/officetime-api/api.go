@@ -12,6 +12,7 @@ import (
 	"officetime-api/internal/model/router/adapter"
 	"officetime-api/internal/model/router/app"
 	"officetime-api/internal/model/router/app/command"
+	"officetime-api/internal/model/router/app/command_query"
 	"officetime-api/internal/model/router/app/query"
 	"officetime-api/pkg/api"
 	"officetime-api/pkg/api/endpoints"
@@ -61,7 +62,7 @@ func main() {
 	// TODO: !
 	routerApp := app.Application{
 		Commands: app.Commands{
-			CreateRouter: command.NewCreateRouterHandler(routerRepository),
+			CreateRouter: command_query.NewCreateRouterHandler(routerRepository),
 			UpdateRouter: command.NewUpdateRouterHandler(routerRepository),
 			DeleteRouter: command.NewDeleteRouterHandler(routerRepository),
 		},

@@ -26,6 +26,6 @@ func NewGetRouterHandler(routerRepo router.Repository) GetRouterHandler {
 	)
 }
 
-func (h getRouterHandler) Handle(ctx context.Context, query GetRouter) (*router.Router, error) {
-	return h.routerRepo.GetRouter(ctx, query.RouterId)
+func (h getRouterHandler) Handle(ctx context.Context, qr GetRouter) (*router.Router, error) {
+	return h.routerRepo.GetRouter(ctx, qr.RouterId)
 }

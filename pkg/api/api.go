@@ -10,6 +10,7 @@ import (
 	"officetime-api/app/service"
 	"officetime-api/internal/model/router/app"
 	"officetime-api/internal/model/router/app/command"
+	"officetime-api/internal/model/router/app/command_query"
 	"officetime-api/internal/model/router/app/query"
 	"officetime-api/internal/model/router/domain/router"
 	"time"
@@ -70,13 +71,13 @@ func (s *apiService) GetRouter(ctx context.Context, routerId int) (*router.Route
 }
 
 func (s *apiService) CreateRouter(ctx context.Context, router *router.Router) (*router.Router, error) {
-	cmd := command.CreateRouter{Router: router}
-	err := s.app.Commands.CreateRouter.Handle(ctx, cmd)
+	cmd := command_query.CreateRouter{Router: router}
+	routerNew, err := s.app.Commands.CreateRouter.Handle(ctx, cmd)
 	if err != nil {
 		return nil, err
 	}
 
-	return router, nil // TODO: return new router
+	return routerNew, nil
 }
 
 func (s *apiService) UpdateRouter(ctx context.Context, routerId int, router *router.Router) (*router.Router, error) {
