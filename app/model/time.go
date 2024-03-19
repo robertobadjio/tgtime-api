@@ -1,9 +1,15 @@
 package model
 
 import (
+	"context"
 	"database/sql"
 	"log"
 	"math"
+	"officetime-api/internal/db"
+	"officetime-api/internal/model/router/adapter"
+	routerApp "officetime-api/internal/model/router/app"
+	"officetime-api/internal/model/router/app/query"
+	"officetime-api/internal/model/router/domain/router"
 	"time"
 )
 
@@ -70,13 +76,28 @@ type Time struct {
 	Routers   []RouterResponse `json:"routers"`
 }
 
+var app routerApp.Application
+
+func init() {
+	routerRepository := adapter.NewPgRouterRepository(db.GetDB())
+	app = routerApp.Application{
+		Queries: routerApp.Queries{
+			GetRouter:  query.NewGetRouterHandler(routerRepository),
+			GetRouters: query.NewGetRoutersHandler(routerRepository),
+		},
+	}
+}
+
 const TotalWorkingDayInSeconds = 8 * 60 * 60 // TODO: Сколько должно быть отработано в день
 
 // GetAllTimesByPeriodsAndRouters
 // Стаститика. Общее время по периоду по всем сотрудникам
 // TODO: Ограничить 7 последними периодами
 func GetAllTimesByPeriodsAndRouters() *StatByPeriodsAndRouters {
-	routers := GetAllRouters()
+	qr := query.GetRouters{}
+	ctx := context.TODO()
+	routers, _ := app.Queries.GetRouters.Handle(ctx, qr) // TODO: Handle error
+
 	periods := GetAllPeriods()
 
 	stat := new(StatByPeriodsAndRouters)
@@ -104,7 +125,11 @@ func GetAllTimesByPeriodsAndRouters() *StatByPeriodsAndRouters {
 // Стаститика. Общее время за день по отделам
 func GetAllTimesDepartmentsByDate(date time.Time) *StatDepartments {
 	departments := GetAllDepartments()
-	routers := GetAllRouters()
+
+	qr := query.GetRouters{}
+	ctx := context.TODO()
+	routers, _ := app.Queries.GetRouters.Handle(ctx, qr) // TODO: Handle error
+
 	data := new(StatDepartments)
 	for _, department := range departments {
 		item := new(StatDepartment)
@@ -261,7 +286,10 @@ func GetTimeByPeriod(userId, period int) PeriodUser {
 		end = now
 	}
 
-	routers := GetAllRouters()
+	qr := query.GetRouters{}
+	ctx := context.TODO()
+	routers, _ := app.Queries.GetRouters.Handle(ctx, qr) // TODO: Handle error
+
 	weekend := GetWeekendByPeriod(begin, end)
 	for curr := begin; curr.Before(end); curr = curr.AddDate(0, 0, 1) {
 		timeStruct := new(Time)
@@ -297,7 +325,7 @@ func GetTimeByPeriod(userId, period int) PeriodUser {
 	return response
 }
 
-func buildResponseRouter(router *Router, macAddress string, curr time.Time) RouterResponse {
+func buildResponseRouter(router *router.Router, macAddress string, curr time.Time) RouterResponse {
 	var responseRouter RouterResponse
 	responseRouter.Total = GetDayTotalSecondsByUser(macAddress, curr, router.Id)
 	responseRouter.Name = router.Name
@@ -323,7 +351,10 @@ func GetTimeDayAll(userId int, date time.Time) Time {
 	timeOutput.Break = GetAllBreaksByTimesOld(times)
 
 	// Собираем routers
-	routers := GetAllRouters()
+	qr := query.GetRouters{}
+	ctx := context.TODO()
+	routers, _ := app.Queries.GetRouters.Handle(ctx, qr) // TODO: Handle error
+
 	var responseRouters []RouterResponse
 	for _, router := range routers {
 		responseRouter := buildResponseRouter(router, macAddress, date)

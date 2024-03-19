@@ -2,18 +2,25 @@ package api
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"officetime-api/app/config"
 	"officetime-api/app/model"
 	"officetime-api/app/service"
+	"officetime-api/internal/model/router/app"
+	"officetime-api/internal/model/router/app/command"
+	"officetime-api/internal/model/router/app/query"
+	"officetime-api/internal/model/router/domain/router"
 	"time"
 )
 
-type apiService struct{}
+type apiService struct {
+	app app.Application
+}
 
-func NewService() Service {
-	return &apiService{}
+func NewService(app app.Application) Service {
+	return &apiService{app: app}
 }
 
 func (s *apiService) Login(_ context.Context, email, password string) (*service.TokenDetails, error) {
@@ -42,6 +49,62 @@ func (s *apiService) ServiceStatus(_ context.Context) (int, error) {
 	return http.StatusOK, nil
 }
 
-func (s *apiService) GetRouters(_ context.Context) ([]*model.Router, error) {
-	return model.GetAllRouters(), nil
+func (s *apiService) GetRouters(ctx context.Context) ([]*router.Router, error) {
+	qr := query.GetRouters{}
+	routers, err := s.app.Queries.GetRouters.Handle(ctx, qr)
+	if err != nil {
+		return nil, err
+	}
+
+	return routers, nil
+}
+
+func (s *apiService) GetRouter(ctx context.Context, routerId int) (*router.Router, error) {
+	qr := query.GetRouter{RouterId: routerId}
+	routerUpdated, err := s.app.Queries.GetRouter.Handle(ctx, qr)
+	if err != nil {
+		return nil, err
+	}
+
+	return routerUpdated, nil
+}
+
+func (s *apiService) CreateRouter(ctx context.Context, router *router.Router) (*router.Router, error) {
+	cmd := command.CreateRouter{Router: router}
+	err := s.app.Commands.CreateRouter.Handle(ctx, cmd)
+	if err != nil {
+		return nil, err
+	}
+
+	return router, nil // TODO: return new router
+}
+
+func (s *apiService) UpdateRouter(ctx context.Context, routerId int, router *router.Router) (*router.Router, error) {
+	if routerId != router.Id {
+		return nil, errors.New("error update ids not equals")
+	}
+
+	cmd := command.UpdateRouter{Router: router}
+	err := s.app.Commands.UpdateRouter.Handle(ctx, cmd)
+	if err != nil {
+		return nil, err
+	}
+
+	qr := query.GetRouter{RouterId: routerId}
+	routerNew, err := s.app.Queries.GetRouter.Handle(ctx, qr)
+	if err != nil {
+		return nil, err
+	}
+
+	return routerNew, nil
+}
+
+func (s *apiService) DeleteRouter(ctx context.Context, routerId int) error {
+	cmd := command.DeleteRouter{RouterId: routerId}
+	err := s.app.Commands.DeleteRouter.Handle(ctx, cmd)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

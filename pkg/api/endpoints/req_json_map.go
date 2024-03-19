@@ -1,12 +1,13 @@
 package endpoints
 
-import "officetime-api/app/model"
+import (
+	"officetime-api/internal/model/router/domain/router"
+)
 
 type LoginRequest struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
-
 type LoginResponse struct {
 	AccessToken         string `json:"access_token"`
 	RefreshToken        string `json:"refresh_token"`
@@ -15,14 +16,39 @@ type LoginResponse struct {
 }
 
 type ServiceStatusRequest struct{}
-
 type ServiceStatusResponse struct {
 	Code int    `json:"status"`
 	Err  string `json:"err,omitempty"`
 }
 
 type GetRoutersRequest struct{}
-
 type GetRoutersResponse struct {
-	Routers []*model.Router `json:"routers"`
+	Routers []*router.Router `json:"routers"`
 }
+
+type GetRouterRequest struct {
+	RouterId int `json:"router_id"`
+}
+type GetRouterResponse struct {
+	Router *router.Router `json:"router"`
+}
+
+type CreateRouterRequest struct {
+	Router *router.Router `json:"router"`
+}
+type CreateRouterResponse struct {
+	Router *router.Router `json:"router"`
+}
+
+type UpdateRouterRequest struct {
+	RouterId int            `json:"router_id"`
+	Router   *router.Router `json:"router"`
+}
+type UpdateRouterResponse struct {
+	Router *router.Router `json:"router"`
+}
+
+type DeleteRouterRequest struct {
+	RouterId int `json:"router_id"`
+}
+type DeleteRouterResponse struct{}

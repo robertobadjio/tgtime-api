@@ -58,6 +58,7 @@ create table router
     id          serial
         constraint router_pk
             primary key,
+    uuid
     name        varchar(255) default ''::character varying not null,
     description varchar(255) default ''::character varying not null,
     address     varchar(20)  default ''::character varying not null,

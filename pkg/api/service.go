@@ -2,18 +2,24 @@ package api
 
 import (
 	"context"
-	"officetime-api/app/model"
 	"officetime-api/app/service"
+	"officetime-api/internal/model/router/domain/router"
 )
 
 type Service interface {
 	Login(ctx context.Context, email, password string) (*service.TokenDetails, error)
-	ServiceStatus(ctx context.Context) (int, error)
-	GetRouters(ctx context.Context) ([]*model.Router, error)
-	/*TokenRefresh(ctx context.Context, ticketID string) (internal.Status, error)
-	Logout(ctx context.Context, ticketID, mark string) (int, error)
+	//TokenRefresh(ctx context.Context, ticketID string) (internal.Status, error)
+	//Logout(ctx context.Context, ticketID, mark string) (int, error)
 
-	GetTimeDayAll(ctx context.Context) (int, error)
+	ServiceStatus(ctx context.Context) (int, error)
+
+	GetRouters(ctx context.Context) ([]*router.Router, error)
+	GetRouter(ctx context.Context, routerId int) (*router.Router, error)
+	CreateRouter(ctx context.Context, router *router.Router) (*router.Router, error)
+	UpdateRouter(ctx context.Context, routerId int, router *router.Router) (*router.Router, error)
+	DeleteRouter(ctx context.Context, routerId int) error
+
+	/*GetTimeDayAll(ctx context.Context) (int, error)
 	TimeDGetTimeByPeriodayAll(ctx context.Context) (int, error)
 	CreateTime(ctx context.Context) (int, error)
 
@@ -34,12 +40,6 @@ type Service interface {
 	CreateDepartment(ctx context.Context) (int, error)
 	UpdateDepartment(ctx context.Context) (int, error)
 	DeleteDepartment(ctx context.Context) (int, error)
-
-	GetRouter(ctx context.Context) (int, error)
-	GetAllRouters(ctx context.Context) (int, error)
-	CreateRouter(ctx context.Context) (int, error)
-	UpdateRouter(ctx context.Context) (int, error)
-	DeleteRouter(ctx context.Context) (int, error)
 
 	GetStatByPeriodsAndRouters(ctx context.Context) (int, error)
 	GetAllTimesDepartmentsByDate(ctx context.Context) (int, error)

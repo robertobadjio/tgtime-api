@@ -16,9 +16,12 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o /officetime-api
 
 FROM scratch
 
+COPY --from=build /usr/share/zoneinfo/Europe/Moscow /usr/share/zoneinfo/Europe/Moscow
 COPY --from=build /officetime-api .
 COPY --from=ghcr.io/tarampampam/curl:8.6.0 /bin/curl /bin/curl
 COPY --from=build /.env .
+
+ENV TZ Europe/Moscow
 
 ENV EXPOSE_PORT=$EXPOSE_PORT
 

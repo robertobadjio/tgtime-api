@@ -10,6 +10,10 @@ type Set struct {
 	LoginEndpoint         endpoint.Endpoint
 	ServiceStatusEndpoint endpoint.Endpoint
 	GetRoutersEndpoint    endpoint.Endpoint
+	GetRouterEndpoint     endpoint.Endpoint
+	CreateRouterEndpoint  endpoint.Endpoint
+	UpdateRouterEndpoint  endpoint.Endpoint
+	DeleteRouterEndpoint  endpoint.Endpoint
 }
 
 func NewEndpointSet(svc api.Service) Set {
@@ -17,6 +21,10 @@ func NewEndpointSet(svc api.Service) Set {
 		LoginEndpoint:         MakeLoginEndpoint(svc),
 		ServiceStatusEndpoint: MakeServiceStatusEndpoint(svc),
 		GetRoutersEndpoint:    MakeGetRoutersEndpoint(svc),
+		GetRouterEndpoint:     MakeGetRouterEndpoint(svc),
+		CreateRouterEndpoint:  MakeCreateRouterEndpoint(svc),
+		UpdateRouterEndpoint:  MakeUpdateRouterEndpoint(svc),
+		DeleteRouterEndpoint:  MakeDeleteRouterEndpoint(svc),
 	}
 }
 
@@ -56,5 +64,49 @@ func MakeGetRoutersEndpoint(svc api.Service) endpoint.Endpoint {
 			return GetRoutersResponse{Routers: routers}, nil
 		}
 		return GetRoutersResponse{Routers: routers}, nil
+	}
+}
+
+func MakeGetRouterEndpoint(svc api.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(GetRouterRequest)
+		router, err := svc.GetRouter(ctx, req.RouterId)
+		if err != nil {
+			return GetRouterResponse{}, err
+		}
+		return GetRouterResponse{Router: router}, nil
+	}
+}
+
+func MakeCreateRouterEndpoint(svc api.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(CreateRouterRequest)
+		router, err := svc.CreateRouter(ctx, req.Router)
+		if err != nil {
+			return CreateRouterResponse{}, err
+		}
+		return CreateRouterResponse{Router: router}, nil
+	}
+}
+
+func MakeUpdateRouterEndpoint(svc api.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(UpdateRouterRequest)
+		router, err := svc.UpdateRouter(ctx, req.RouterId, req.Router)
+		if err != nil {
+			return UpdateRouterResponse{}, err
+		}
+		return UpdateRouterResponse{Router: router}, nil
+	}
+}
+
+func MakeDeleteRouterEndpoint(svc api.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(DeleteRouterRequest)
+		err := svc.DeleteRouter(ctx, req.RouterId)
+		if err != nil {
+			return DeleteRouterResponse{}, err
+		}
+		return DeleteRouterResponse{}, nil
 	}
 }

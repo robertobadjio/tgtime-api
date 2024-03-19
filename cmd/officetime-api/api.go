@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	jwt "github.com/dgrijalva/jwt-go"
 	kitgrpc "github.com/go-kit/kit/transport/grpc"
@@ -9,6 +8,11 @@ import (
 	"log"
 	"net"
 	pb "officetime-api/api/v1/pb/api"
+	"officetime-api/internal/db"
+	"officetime-api/internal/model/router/adapter"
+	"officetime-api/internal/model/router/app"
+	"officetime-api/internal/model/router/app/command"
+	"officetime-api/internal/model/router/app/query"
 	"officetime-api/pkg/api"
 	"officetime-api/pkg/api/endpoints"
 	"officetime-api/pkg/api/transport"
@@ -29,14 +33,12 @@ import (
 	"time"
 )
 
-var db *sql.DB
-
 func main() {
 	cfg := config.New()
-	db = getDB()
-	dao.Db = db
-	model.Db = db
-	aggregator.Db = db
+
+	dao.Db = db.GetDB()
+	model.Db = db.GetDB()
+	aggregator.Db = db.GetDB()
 	go every12Day()
 
 	/*fmt.Println("Setting up server, enabling CORS...")
@@ -54,8 +56,22 @@ func main() {
 	//logger = log.NewLogfmtLogger(log.NewSyncWriter(os.Stderr))
 	//logger = log.With(logger, "ts", log.DefaultTimestampUTC)
 
+	routerRepository := adapter.NewPgRouterRepository(db.GetDB())
+
+	// TODO: !
+	routerApp := app.Application{
+		Commands: app.Commands{
+			CreateRouter: command.NewCreateRouterHandler(routerRepository),
+			UpdateRouter: command.NewUpdateRouterHandler(routerRepository),
+			DeleteRouter: command.NewDeleteRouterHandler(routerRepository),
+		},
+		Queries: app.Queries{
+			GetRouter:  query.NewGetRouterHandler(routerRepository),
+			GetRouters: query.NewGetRoutersHandler(routerRepository),
+		},
+	}
 	var (
-		s           = api.NewService()
+		s           = api.NewService(routerApp)
 		eps         = endpoints.NewEndpointSet(s)
 		httpHandler = transport.NewHTTPHandler(eps)
 		grpcServer  = transport.NewGRPCServer(eps)
@@ -169,7 +185,6 @@ func main() {
 	router.Handle("/api-service/department/{id}", isAuthorized(dao.UpdateDepartment)).Methods("PATCH")
 	router.Handle("/api-service/department/{id}", isAuthorized(dao.DeleteDepartment)).Methods("DELETE")
 
-	router.Handle("/api-service/router/{id}", isAuthorized(dao.GetRouter)).Methods("GET")
 	router.Handle("/api-service/router", isAuthorized(dao.CreateRouter)).Methods("POST")
 	router.Handle("/api-service/router/{id}", isAuthorized(dao.UpdateRouter)).Methods("PATCH")
 	router.Handle("/api-service/router/{id}", isAuthorized(dao.DeleteRouter)).Methods("DELETE")
@@ -203,31 +218,6 @@ func every12Day() {
 		d = 24 * time.Hour
 		aggregator.AggregateTime()
 	}
-}
-
-func getDB() *sql.DB {
-	cfg := config.New()
-	pgConString := fmt.Sprintf(
-		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
-		cfg.DataBaseHost,
-		cfg.DataBasePort,
-		cfg.DataBaseUser,
-		cfg.DataBasePassword,
-		cfg.DataBaseName,
-		cfg.DataBaseSslMode,
-	)
-
-	db, err := sql.Open("postgres", pgConString)
-
-	if err != nil {
-		panic(err)
-	}
-
-	if err = db.Ping(); err != nil {
-		panic(err)
-	}
-
-	return db
 }
 
 func isAuthorized(endpoint func(http.ResponseWriter, *http.Request)) http.Handler {
