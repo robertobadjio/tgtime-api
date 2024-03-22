@@ -150,7 +150,7 @@ func GetAllTimesByPeriodsAndRouters() *StatByPeriodsAndRouters {
 func GetAllTimesDepartmentsByDate(date time.Time) *StatDepartments {
 	ctx := context.TODO()
 
-	qrDepartments := routerQuery.GetRouters{}
+	qrDepartments := departmentQuery.GetDepartments{}
 	departments, _ := dApp.Queries.GetDepartments.Handle(ctx, qrDepartments) // TODO: Handle error
 
 	qrRouters := routerQuery.GetRouters{}

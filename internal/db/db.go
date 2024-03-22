@@ -3,7 +3,7 @@ package db
 import (
 	"database/sql"
 	"fmt"
-	"officetime-api/app/config"
+	"officetime-api/internal/config"
 )
 
 func GetDB() *sql.DB {

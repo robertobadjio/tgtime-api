@@ -6,9 +6,9 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"io/ioutil"
 	"net/http"
-	"officetime-api/app/config"
 	"officetime-api/app/model"
 	"officetime-api/app/service"
+	"officetime-api/internal/config"
 	"strconv"
 	"time"
 )
