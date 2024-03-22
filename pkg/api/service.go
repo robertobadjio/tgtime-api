@@ -33,6 +33,8 @@ type Service interface {
 	UpdateDepartment(ctx context.Context, departmentId int, department *department.Department) (*department.Department, error)
 	DeleteDepartment(ctx context.Context, departmentId int) error
 
+	GetWeekends(ctx context.Context) ([]string, error)
+
 	/*GetTimeDayAll(ctx context.Context) (int, error)
 	TimeDGetTimeByPeriodayAll(ctx context.Context) (int, error)
 	CreateTime(ctx context.Context) (int, error)
@@ -47,5 +49,5 @@ type Service interface {
 	GetAllTimesDepartmentsByDate(ctx context.Context) (int, error)
 	GetStatWorkingPeriod(ctx context.Context) (int, error)
 
-	GetWeekend(ctx context.Context) (int, error)*/
+	*/
 }

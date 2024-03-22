@@ -28,6 +28,8 @@ type Set struct {
 	CreateDepartmentEndpoint endpoint.Endpoint
 	UpdateDepartmentEndpoint endpoint.Endpoint
 	DeleteDepartmentEndpoint endpoint.Endpoint
+
+	GetWeekendsEndpoint endpoint.Endpoint
 }
 
 func NewEndpointSet(svc api.Service) Set {
@@ -53,6 +55,8 @@ func NewEndpointSet(svc api.Service) Set {
 		CreateDepartmentEndpoint: MakeCreateDepartmentEndpoint(svc),
 		UpdateDepartmentEndpoint: MakeUpdateDepartmentEndpoint(svc),
 		DeleteDepartmentEndpoint: MakeDeleteDepartmentEndpoint(svc),
+
+		GetWeekendsEndpoint: MakeGetWeekendsEndpoint(svc),
 	}
 }
 
@@ -246,5 +250,16 @@ func MakeDeleteDepartmentEndpoint(svc api.Service) endpoint.Endpoint {
 			return DeleteDepartmentResponse{}, err
 		}
 		return DeleteDepartmentResponse{}, nil
+	}
+}
+
+func MakeGetWeekendsEndpoint(svc api.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		_ = request.(GetWeekendsRequest)
+		weekends, err := svc.GetWeekends(ctx)
+		if err != nil {
+			return GetWeekendsResponse{Weekends: weekends}, nil
+		}
+		return GetWeekendsResponse{Weekends: weekends}, nil
 	}
 }

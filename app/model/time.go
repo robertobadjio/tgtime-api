@@ -17,6 +17,9 @@ import (
 	routerApp "officetime-api/internal/model/router/app"
 	routerQuery "officetime-api/internal/model/router/app/query"
 	"officetime-api/internal/model/router/domain/router"
+	weekendAdapter "officetime-api/internal/model/weekend/adapter"
+	weekendApp "officetime-api/internal/model/weekend/app"
+	weekendQuery "officetime-api/internal/model/weekend/app/query"
 	"time"
 )
 
@@ -86,6 +89,7 @@ type Time struct {
 var rApp routerApp.Application
 var pApp periodApp.Application
 var dApp departmentApp.Application
+var wApp weekendApp.Application
 
 func init() {
 	routerRepository := routerAdapter.NewPgRouterRepository(db.GetDB())
@@ -107,6 +111,13 @@ func init() {
 	dApp = departmentApp.Application{
 		Queries: departmentApp.Queries{
 			GetDepartments: departmentQuery.NewGetDepartmentsHandler(departmentRepository),
+		},
+	}
+
+	weekendRepository := weekendAdapter.NewPgWeekendRepository(db.GetDB())
+	wApp = weekendApp.Application{
+		Queries: weekendApp.Queries{
+			GetWeekends: weekendQuery.NewGetWeekendsHandler(weekendRepository),
 		},
 	}
 }
@@ -260,13 +271,13 @@ func GetAllByDate(macAddress string, date time.Time, routerId int) []*TimeUser {
 	args = append(args, GetSecondsByBeginDate(date.Format("2006-01-02")))
 	args = append(args, GetSecondsByEndDate(date.Format("2006-01-02")))
 
-	var routerQuery string
+	var rQuery string
 	if routerId != 0 {
-		routerQuery = " AND t.router_id = $4"
+		rQuery = " AND t.router_id = $4"
 		args = append(args, routerId)
 	}
 
-	rows, err := Db.Query("SELECT t.mac_address, t.second FROM time t WHERE t.mac_address = $1 AND t.second BETWEEN $2 AND $3"+routerQuery+" ORDER BY t.second", args...)
+	rows, err := Db.Query("SELECT t.mac_address, t.second FROM time t WHERE t.mac_address = $1 AND t.second BETWEEN $2 AND $3"+rQuery+" ORDER BY t.second", args...)
 	if err != nil {
 		panic(err)
 	}
@@ -316,7 +327,9 @@ func GetTimeByPeriod(userId, period int) PeriodUser {
 	ctx := context.TODO()
 	routers, _ := rApp.Queries.GetRouters.Handle(ctx, qr) // TODO: Handle error
 
-	weekend := GetWeekendByPeriod(begin, end)
+	qrWeekendsByPeriod := weekendQuery.GetWeekendsByPeriod{}
+	weekend, _ := wApp.Queries.GetWeekendsByPeriod.Handle(ctx, qrWeekendsByPeriod) // TODO: Handle error
+
 	for curr := begin; curr.Before(end); curr = curr.AddDate(0, 0, 1) {
 		timeStruct := new(Time)
 		timeStruct.Date = curr.Format("2006-01-02")

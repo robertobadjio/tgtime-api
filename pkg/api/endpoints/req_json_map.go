@@ -118,3 +118,8 @@ type DeleteDepartmentRequest struct {
 	DepartmentId int `json:"department_id"`
 }
 type DeleteDepartmentResponse struct{}
+
+type GetWeekendsRequest struct{}
+type GetWeekendsResponse struct {
+	Weekends []string `json:"weekends"`
+}

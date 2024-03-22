@@ -25,6 +25,9 @@ import (
 	routerCommand "officetime-api/internal/model/router/app/command"
 	routerCommandQuery "officetime-api/internal/model/router/app/command_query"
 	routerQuery "officetime-api/internal/model/router/app/query"
+	weekendAdapter "officetime-api/internal/model/weekend/adapter"
+	weekendApp "officetime-api/internal/model/weekend/app"
+	weekendQuery "officetime-api/internal/model/weekend/app/query"
 	"officetime-api/pkg/api"
 	"officetime-api/pkg/api/endpoints"
 	"officetime-api/pkg/api/transport"
@@ -112,8 +115,15 @@ func main() {
 		},
 	}
 
+	weekendRepository := weekendAdapter.NewPgWeekendRepository(db.GetDB())
+	wApp := weekendApp.Application{
+		Queries: weekendApp.Queries{
+			GetWeekends: weekendQuery.NewGetWeekendsHandler(weekendRepository),
+		},
+	}
+
 	var (
-		s           = api.NewService(rApp, pApp, dApp)
+		s           = api.NewService(rApp, pApp, dApp, wApp)
 		eps         = endpoints.NewEndpointSet(s)
 		httpHandler = transport.NewHTTPHandler(eps)
 		grpcServer  = transport.NewGRPCServer(eps)

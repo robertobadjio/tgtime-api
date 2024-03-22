@@ -10,6 +10,7 @@ import (
 	departmentApp "officetime-api/internal/model/department/app"
 	periodApp "officetime-api/internal/model/period/app"
 	routerApp "officetime-api/internal/model/router/app"
+	weekendApp "officetime-api/internal/model/weekend/app"
 	"time"
 )
 
@@ -17,17 +18,20 @@ type apiService struct {
 	routerApp     routerApp.Application
 	periodApp     periodApp.Application
 	departmentApp departmentApp.Application
+	weekendApp    weekendApp.Application
 }
 
 func NewService(
 	routerApp routerApp.Application,
 	periodApp periodApp.Application,
 	departmentApp departmentApp.Application,
+	weekendApp weekendApp.Application,
 ) Service {
 	return &apiService{
 		routerApp:     routerApp,
 		periodApp:     periodApp,
 		departmentApp: departmentApp,
+		weekendApp:    weekendApp,
 	}
 }
 
