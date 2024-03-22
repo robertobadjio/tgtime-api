@@ -122,7 +122,3 @@ func buildTimeStructFromDate(date string) time.Time {
 
 	return second
 }*/
-
-
-
-

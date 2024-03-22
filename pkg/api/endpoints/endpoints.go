@@ -7,24 +7,52 @@ import (
 )
 
 type Set struct {
-	LoginEndpoint         endpoint.Endpoint
+	LoginEndpoint endpoint.Endpoint
+
 	ServiceStatusEndpoint endpoint.Endpoint
-	GetRoutersEndpoint    endpoint.Endpoint
-	GetRouterEndpoint     endpoint.Endpoint
-	CreateRouterEndpoint  endpoint.Endpoint
-	UpdateRouterEndpoint  endpoint.Endpoint
-	DeleteRouterEndpoint  endpoint.Endpoint
+
+	GetRoutersEndpoint   endpoint.Endpoint
+	GetRouterEndpoint    endpoint.Endpoint
+	CreateRouterEndpoint endpoint.Endpoint
+	UpdateRouterEndpoint endpoint.Endpoint
+	DeleteRouterEndpoint endpoint.Endpoint
+
+	GetPeriodEndpoint    endpoint.Endpoint
+	GetPeriodsEndpoint   endpoint.Endpoint
+	CreatePeriodEndpoint endpoint.Endpoint
+	UpdatePeriodEndpoint endpoint.Endpoint
+	DeletePeriodEndpoint endpoint.Endpoint
+
+	GetDepartmentEndpoint    endpoint.Endpoint
+	GetDepartmentsEndpoint   endpoint.Endpoint
+	CreateDepartmentEndpoint endpoint.Endpoint
+	UpdateDepartmentEndpoint endpoint.Endpoint
+	DeleteDepartmentEndpoint endpoint.Endpoint
 }
 
 func NewEndpointSet(svc api.Service) Set {
 	return Set{
-		LoginEndpoint:         MakeLoginEndpoint(svc),
+		LoginEndpoint: MakeLoginEndpoint(svc),
+
 		ServiceStatusEndpoint: MakeServiceStatusEndpoint(svc),
-		GetRoutersEndpoint:    MakeGetRoutersEndpoint(svc),
-		GetRouterEndpoint:     MakeGetRouterEndpoint(svc),
-		CreateRouterEndpoint:  MakeCreateRouterEndpoint(svc),
-		UpdateRouterEndpoint:  MakeUpdateRouterEndpoint(svc),
-		DeleteRouterEndpoint:  MakeDeleteRouterEndpoint(svc),
+
+		GetRoutersEndpoint:   MakeGetRoutersEndpoint(svc),
+		GetRouterEndpoint:    MakeGetRouterEndpoint(svc),
+		CreateRouterEndpoint: MakeCreateRouterEndpoint(svc),
+		UpdateRouterEndpoint: MakeUpdateRouterEndpoint(svc),
+		DeleteRouterEndpoint: MakeDeleteRouterEndpoint(svc),
+
+		GetPeriodEndpoint:    MakeGetPeriodEndpoint(svc),
+		GetPeriodsEndpoint:   MakeGetPeriodsEndpoint(svc),
+		CreatePeriodEndpoint: MakeCreatePeriodEndpoint(svc),
+		UpdatePeriodEndpoint: MakeUpdatePeriodEndpoint(svc),
+		DeletePeriodEndpoint: MakeDeletePeriodEndpoint(svc),
+
+		GetDepartmentEndpoint:    MakeGetDepartmentEndpoint(svc),
+		GetDepartmentsEndpoint:   MakeGetDepartmentsEndpoint(svc),
+		CreateDepartmentEndpoint: MakeCreateDepartmentEndpoint(svc),
+		UpdateDepartmentEndpoint: MakeUpdateDepartmentEndpoint(svc),
+		DeleteDepartmentEndpoint: MakeDeleteDepartmentEndpoint(svc),
 	}
 }
 
@@ -108,5 +136,115 @@ func MakeDeleteRouterEndpoint(svc api.Service) endpoint.Endpoint {
 			return DeleteRouterResponse{}, err
 		}
 		return DeleteRouterResponse{}, nil
+	}
+}
+
+func MakeGetPeriodEndpoint(svc api.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(GetPeriodRequest)
+		period, err := svc.GetPeriod(ctx, req.PeriodId)
+		if err != nil {
+			return GetPeriodResponse{}, err
+		}
+		return GetPeriodResponse{Period: period}, nil
+	}
+}
+
+func MakeGetPeriodsEndpoint(svc api.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		_ = request.(GetPeriodsRequest)
+		periods, err := svc.GetPeriods(ctx)
+		if err != nil {
+			return GetPeriodsResponse{Periods: periods}, nil
+		}
+		return GetPeriodsResponse{Periods: periods}, nil
+	}
+}
+
+func MakeCreatePeriodEndpoint(svc api.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(CreatePeriodRequest)
+		period, err := svc.CreatePeriod(ctx, req.Period)
+		if err != nil {
+			return CreatePeriodResponse{}, err
+		}
+		return CreatePeriodResponse{Period: period}, nil
+	}
+}
+
+func MakeUpdatePeriodEndpoint(svc api.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(UpdatePeriodRequest)
+		period, err := svc.UpdatePeriod(ctx, req.PeriodId, req.Period)
+		if err != nil {
+			return UpdatePeriodResponse{}, err
+		}
+		return UpdatePeriodResponse{Period: period}, nil
+	}
+}
+
+func MakeDeletePeriodEndpoint(svc api.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(DeletePeriodRequest)
+		err := svc.DeletePeriod(ctx, req.PeriodId)
+		if err != nil {
+			return DeletePeriodResponse{}, err
+		}
+		return DeletePeriodResponse{}, nil
+	}
+}
+
+func MakeGetDepartmentEndpoint(svc api.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(GetDepartmentRequest)
+		department, err := svc.GetDepartment(ctx, req.DepartmentId)
+		if err != nil {
+			return GetDepartmentResponse{}, err
+		}
+		return GetDepartmentResponse{Department: department}, nil
+	}
+}
+
+func MakeGetDepartmentsEndpoint(svc api.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		_ = request.(GetDepartmentsRequest)
+		departments, err := svc.GetDepartments(ctx)
+		if err != nil {
+			return GetDepartmentsResponse{Departments: departments}, nil
+		}
+		return GetDepartmentsResponse{Departments: departments}, nil
+	}
+}
+
+func MakeCreateDepartmentEndpoint(svc api.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(CreateDepartmentRequest)
+		department, err := svc.CreateDepartment(ctx, req.Department)
+		if err != nil {
+			return CreateDepartmentResponse{}, err
+		}
+		return CreateDepartmentResponse{Department: department}, nil
+	}
+}
+
+func MakeUpdateDepartmentEndpoint(svc api.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(UpdateDepartmentRequest)
+		department, err := svc.UpdateDepartment(ctx, req.DepartmentId, req.Department)
+		if err != nil {
+			return UpdateDepartmentResponse{}, err
+		}
+		return UpdateDepartmentResponse{Department: department}, nil
+	}
+}
+
+func MakeDeleteDepartmentEndpoint(svc api.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(DeleteDepartmentRequest)
+		err := svc.DeleteDepartment(ctx, req.DepartmentId)
+		if err != nil {
+			return DeleteDepartmentResponse{}, err
+		}
+		return DeleteDepartmentResponse{}, nil
 	}
 }

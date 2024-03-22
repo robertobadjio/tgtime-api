@@ -33,7 +33,7 @@ func (prr PgRouterRepository) CreateRouter(ctx context.Context, router *router.R
 	moscowLocation, _ := time.LoadLocation("Europe/Moscow")
 	now := time.Now().In(moscowLocation)
 	lastInsertId := 0
-	err = db.GetDB().QueryRow("INSERT INTO router (name, description, address, login, password, status, work_time, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id", router.Name, router.Description, router.Address, router.Login, router.Password, router.Status, router.WorkTime, now.Format("2006-01-02 15:04:05")).Scan(&lastInsertId)
+	err = prr.db.QueryRow("INSERT INTO router (name, description, address, login, password, status, work_time, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id", router.Name, router.Description, router.Address, router.Login, router.Password, router.Status, router.WorkTime, now.Format("2006-01-02 15:04:05")).Scan(&lastInsertId)
 	if err != nil {
 		return nil, fmt.Errorf("error inserting router into db: %v", err)
 	}
@@ -59,19 +59,19 @@ func (prr PgRouterRepository) UpdateRouter(_ context.Context, router *router.Rou
 	moscowLocation, _ := time.LoadLocation("Europe/Moscow")
 	now := time.Now().In(moscowLocation)
 
-	_, err := db.GetDB().Exec(
+	_, err := prr.db.Exec(
 		"UPDATE router SET name = $1, description = $2, address = $3, login = $4, password = $5, status = $6, work_time = $7, updated_at = $8 WHERE id = $9",
 		router.Name, router.Description, router.Address, router.Login, router.Password, router.Status, router.WorkTime, now.Format("2006-01-02 15:04:05"), router.Id)
 	if err != nil {
 		return nil, err
 	}
 
-	return router, nil
+	return router, nil // TODO: !
 }
 
 func (prr PgRouterRepository) GetRouter(_ context.Context, routerId int) (*router.Router, error) {
 	router := new(router.Router)
-	if err := db.GetDB().QueryRow(
+	if err := prr.db.QueryRow(
 		"SELECT id, name, description, address, login, password, status, work_time FROM router WHERE id = $1",
 		routerId,
 	).Scan(&router.Id, &router.Name, &router.Description, &router.Address, &router.Login, &router.Password, &router.Status, &router.WorkTime); err == nil {
@@ -84,7 +84,7 @@ func (prr PgRouterRepository) GetRouter(_ context.Context, routerId int) (*route
 }
 
 func (prr PgRouterRepository) DeleteRouter(_ context.Context, routerId int) error {
-	_, err := db.GetDB().Exec("DELETE FROM router WHERE id = $1", routerId)
+	_, err := prr.db.Exec("DELETE FROM router WHERE id = $1", routerId)
 	if err != nil {
 		return err
 	}
@@ -93,7 +93,7 @@ func (prr PgRouterRepository) DeleteRouter(_ context.Context, routerId int) erro
 }
 
 func (prr PgRouterRepository) GetRouters(_ context.Context) ([]*router.Router, error) {
-	rows, err := db.GetDB().Query("SELECT id, name, description, address, login, password, status, work_time FROM router")
+	rows, err := prr.db.Query("SELECT id, name, description, address, login, password, status, work_time FROM router")
 	if err != nil {
 		return nil, fmt.Errorf("error getting router: %v", err)
 	}
@@ -115,7 +115,7 @@ func (prr PgRouterRepository) GetRouters(_ context.Context) ([]*router.Router, e
 
 func (prr PgRouterRepository) existsRouterByFilter(filters []string) (bool, error) {
 	var id int
-	err := db.GetDB().QueryRow(
+	err := prr.db.QueryRow(
 		"SELECT id FROM router WHERE " + buildOrCondition(filters),
 	).Scan(&id)
 	if err != nil {

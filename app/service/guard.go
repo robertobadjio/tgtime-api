@@ -9,4 +9,3 @@ func CheckAuth(passwordHash, password string) bool {
 
 	return err == nil
 }
-

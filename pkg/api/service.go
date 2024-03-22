@@ -3,6 +3,8 @@ package api
 import (
 	"context"
 	"officetime-api/app/service"
+	"officetime-api/internal/model/department/domain/department"
+	"officetime-api/internal/model/period/domain/period"
 	"officetime-api/internal/model/router/domain/router"
 )
 
@@ -19,27 +21,27 @@ type Service interface {
 	UpdateRouter(ctx context.Context, routerId int, router *router.Router) (*router.Router, error)
 	DeleteRouter(ctx context.Context, routerId int) error
 
+	GetPeriod(ctx context.Context, periodId int) (*period.Period, error)
+	GetPeriods(ctx context.Context) ([]*period.Period, error)
+	CreatePeriod(ctx context.Context, period *period.Period) (*period.Period, error)
+	UpdatePeriod(ctx context.Context, periodId int, period *period.Period) (*period.Period, error)
+	DeletePeriod(ctx context.Context, periodId int) error
+
+	GetDepartment(ctx context.Context, departmentId int) (*department.Department, error)
+	GetDepartments(ctx context.Context) ([]*department.Department, error)
+	CreateDepartment(ctx context.Context, department *department.Department) (*department.Department, error)
+	UpdateDepartment(ctx context.Context, departmentId int, department *department.Department) (*department.Department, error)
+	DeleteDepartment(ctx context.Context, departmentId int) error
+
 	/*GetTimeDayAll(ctx context.Context) (int, error)
 	TimeDGetTimeByPeriodayAll(ctx context.Context) (int, error)
 	CreateTime(ctx context.Context) (int, error)
-
-	GetAllPeriods(ctx context.Context) (int, error)
-	GetPeriod(ctx context.Context) (int, error)
-	CreatePeriod(ctx context.Context) (int, error)
-	UpdatePeriod(ctx context.Context) (int, error)
-	DeletePeriod(ctx context.Context) (int, error)
 
 	GetAllUsers(ctx context.Context) (int, error)
 	GetUser(ctx context.Context) (int, error)
 	UpdateUser(ctx context.Context) (int, error)
 	CreateUser(ctx context.Context) (int, error)
 	CreatDeleteUsereUser(ctx context.Context) (int, error)
-
-	GetDepartment(ctx context.Context) (int, error)
-	GetAllDepartments(ctx context.Context) (int, error)
-	CreateDepartment(ctx context.Context) (int, error)
-	UpdateDepartment(ctx context.Context) (int, error)
-	DeleteDepartment(ctx context.Context) (int, error)
 
 	GetStatByPeriodsAndRouters(ctx context.Context) (int, error)
 	GetAllTimesDepartmentsByDate(ctx context.Context) (int, error)

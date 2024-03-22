@@ -7,12 +7,12 @@ import (
 )
 
 type Application struct {
-	Commands Commands
-	Queries  Queries
+	Commands        Commands
+	Queries         Queries
+	CommandsQueries CommandsQueries
 }
 
 type Commands struct {
-	CreateRouter command_query.CreateRouterHandler
 	UpdateRouter command.UpdateRouterHandler
 	DeleteRouter command.DeleteRouterHandler
 }
@@ -20,4 +20,8 @@ type Commands struct {
 type Queries struct {
 	GetRouter  query.GetRouterHandler
 	GetRouters query.GetRoutersHandler
+}
+
+type CommandsQueries struct {
+	CreateRouter command_query.CreateRouterHandler
 }

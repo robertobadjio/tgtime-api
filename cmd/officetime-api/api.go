@@ -9,11 +9,21 @@ import (
 	"net"
 	pb "officetime-api/api/v1/pb/api"
 	"officetime-api/internal/db"
-	"officetime-api/internal/model/router/adapter"
-	"officetime-api/internal/model/router/app"
-	"officetime-api/internal/model/router/app/command"
-	"officetime-api/internal/model/router/app/command_query"
-	"officetime-api/internal/model/router/app/query"
+	departmentAdapter "officetime-api/internal/model/department/adapter"
+	departmentApp "officetime-api/internal/model/department/app"
+	departmentCommand "officetime-api/internal/model/department/app/command"
+	departmentCommandQuery "officetime-api/internal/model/department/app/command_query"
+	departmentQuery "officetime-api/internal/model/department/app/query"
+	periodAdapter "officetime-api/internal/model/period/adapter"
+	periodApp "officetime-api/internal/model/period/app"
+	periodCommand "officetime-api/internal/model/period/app/command"
+	periodCommandQuery "officetime-api/internal/model/period/app/command_query"
+	periodQuery "officetime-api/internal/model/period/app/query"
+	routerAdapter "officetime-api/internal/model/router/adapter"
+	routerApp "officetime-api/internal/model/router/app"
+	routerCommand "officetime-api/internal/model/router/app/command"
+	routerCommandQuery "officetime-api/internal/model/router/app/command_query"
+	routerQuery "officetime-api/internal/model/router/app/query"
 	"officetime-api/pkg/api"
 	"officetime-api/pkg/api/endpoints"
 	"officetime-api/pkg/api/transport"
@@ -57,53 +67,57 @@ func main() {
 	//logger = log.NewLogfmtLogger(log.NewSyncWriter(os.Stderr))
 	//logger = log.With(logger, "ts", log.DefaultTimestampUTC)
 
-	routerRepository := adapter.NewPgRouterRepository(db.GetDB())
-
-	// TODO: !
-	routerApp := app.Application{
-		Commands: app.Commands{
-			CreateRouter: command_query.NewCreateRouterHandler(routerRepository),
-			UpdateRouter: command.NewUpdateRouterHandler(routerRepository),
-			DeleteRouter: command.NewDeleteRouterHandler(routerRepository),
+	routerRepository := routerAdapter.NewPgRouterRepository(db.GetDB())
+	rApp := routerApp.Application{
+		Commands: routerApp.Commands{
+			UpdateRouter: routerCommand.NewUpdateRouterHandler(routerRepository),
+			DeleteRouter: routerCommand.NewDeleteRouterHandler(routerRepository),
 		},
-		Queries: app.Queries{
-			GetRouter:  query.NewGetRouterHandler(routerRepository),
-			GetRouters: query.NewGetRoutersHandler(routerRepository),
+		Queries: routerApp.Queries{
+			GetRouter:  routerQuery.NewGetRouterHandler(routerRepository),
+			GetRouters: routerQuery.NewGetRoutersHandler(routerRepository),
+		},
+		CommandsQueries: routerApp.CommandsQueries{
+			CreateRouter: routerCommandQuery.NewCreateRouterHandler(routerRepository),
 		},
 	}
+
+	periodRepository := periodAdapter.NewPgPeriodRepository(db.GetDB())
+	pApp := periodApp.Application{
+		Commands: periodApp.Commands{
+			UpdatePeriod: periodCommand.NewUpdatePeriodHandler(periodRepository),
+			DeletePeriod: periodCommand.NewDeletePeriodHandler(periodRepository),
+		},
+		Queries: periodApp.Queries{
+			GetPeriod:  periodQuery.NewGetPeriodHandler(periodRepository),
+			GetPeriods: periodQuery.NewGetPeriodsHandler(periodRepository),
+		},
+		CommandsQueries: periodApp.CommandsQueries{
+			CreatePeriod: periodCommandQuery.NewCreatePeriodHandler(periodRepository),
+		},
+	}
+
+	departmentRepository := departmentAdapter.NewPgDepartmentRepository(db.GetDB())
+	dApp := departmentApp.Application{
+		Commands: departmentApp.Commands{
+			UpdateDepartment: departmentCommand.NewUpdateDepartmentHandler(departmentRepository),
+			DeleteDepartment: departmentCommand.NewDeleteDepartmentHandler(departmentRepository),
+		},
+		Queries: departmentApp.Queries{
+			GetDepartment:  departmentQuery.NewGetDepartmentHandler(departmentRepository),
+			GetDepartments: departmentQuery.NewGetDepartmentsHandler(departmentRepository),
+		},
+		CommandsQueries: departmentApp.CommandsQueries{
+			CreateDepartment: departmentCommandQuery.NewCreateDepartmentHandler(departmentRepository),
+		},
+	}
+
 	var (
-		s           = api.NewService(routerApp)
+		s           = api.NewService(rApp, pApp, dApp)
 		eps         = endpoints.NewEndpointSet(s)
 		httpHandler = transport.NewHTTPHandler(eps)
 		grpcServer  = transport.NewGRPCServer(eps)
 	)
-
-	// http
-	/*httpListener, err := net.Listen("tcp", httpAddr)
-	if err != nil {
-		fmt.Println(err)
-		//logger.Log("transport", "HTTP", "during", "Listen", "err", err)
-		os.Exit(1)
-	}
-	err = http.Serve(httpListener, httpHandler)
-	if err != nil {
-		fmt.Println(err.Error())
-	}
-
-	// grpc
-	grpcListener, err := net.Listen("tcp", grpcAddr)
-	if err != nil {
-		fmt.Println("transport", "gRPC", "during", "Listen", "err", err)
-		os.Exit(1)
-	}
-
-	fmt.Println("transport", "gRPC", "addr", grpcAddr)
-	baseServer := grpc.NewServer(grpc.UnaryInterceptor(kitgrpc.Interceptor))
-	pb.RegisterApiServer(baseServer, grpcServer)
-	err = baseServer.Serve(grpcListener)
-	if err != nil {
-		fmt.Println(err.Error())
-	}*/
 
 	// API Gateway
 	var g group.Group
@@ -158,7 +172,6 @@ func main() {
 	/*router := mux.NewRouter().StrictSlash(true)
 	router.Use(commonMiddleware)
 
-	router.HandleFunc("/api-service/login", dao.Login).Methods("POST")
 	router.HandleFunc("/api-service/token/refresh", dao.Refresh).Methods("POST")
 	router.HandleFunc("/api-service/logout", dao.Logout).Methods("POST")
 
@@ -168,27 +181,11 @@ func main() {
 	router.Handle("/api-service/time/{id}/period/{period}", isAuthorized(dao.GetTimeByPeriod)).Methods("GET")
 	router.Handle("/api-service/time", isAuthorized(dao.CreateTime)).Methods("POST")
 
-	router.Handle("/api-service/period", isAuthorized(dao.GetAllPeriods)).Methods("GET")
-	router.Handle("/api-service/period/{id}", isAuthorized(dao.GetPeriod)).Methods("GET")
-	router.Handle("/api-service/period", isAuthorized(dao.CreatePeriod)).Methods("POST")
-	router.Handle("/api-service/period/{id}", isAuthorized(dao.UpdatePeriod)).Methods("PATCH")
-	router.Handle("/api-service/period/{id}", isAuthorized(dao.DeletePeriod)).Methods("DELETE")
-
 	router.Handle("/api-service/user", isAuthorized(dao.GetAllUsers)).Methods("GET")
 	router.Handle("/api-service/user/{id}", isAuthorized(dao.GetUser)).Methods("GET")
 	router.Handle("/api-service/user/{id}", isAuthorized(dao.UpdateUser)).Methods("PATCH")
 	router.Handle("/api-service/user", isAuthorized(dao.CreateUser)).Methods("POST")
 	router.Handle("/api-service/user/{id}", isAuthorized(dao.DeleteUser)).Methods("DELETE")
-
-	router.Handle("/api-service/department/{id}", isAuthorized(dao.GetDepartment)).Methods("GET")
-	router.Handle("/api-service/department", isAuthorized(dao.GetAllDepartments)).Methods("GET")
-	router.Handle("/api-service/department", isAuthorized(dao.CreateDepartment)).Methods("POST")
-	router.Handle("/api-service/department/{id}", isAuthorized(dao.UpdateDepartment)).Methods("PATCH")
-	router.Handle("/api-service/department/{id}", isAuthorized(dao.DeleteDepartment)).Methods("DELETE")
-
-	router.Handle("/api-service/router", isAuthorized(dao.CreateRouter)).Methods("POST")
-	router.Handle("/api-service/router/{id}", isAuthorized(dao.UpdateRouter)).Methods("PATCH")
-	router.Handle("/api-service/router/{id}", isAuthorized(dao.DeleteRouter)).Methods("DELETE")
 
 	router.Handle("/api-service/stat/periods-and-routers", isAuthorized(dao.GetStatByPeriodsAndRouters)).Methods("GET")
 	router.Handle("/api-service/stat/departments/{date}", isAuthorized(dao.GetAllTimesDepartmentsByDate)).Methods("GET")

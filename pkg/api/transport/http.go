@@ -4,13 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	httptransport "github.com/go-kit/kit/transport/http"
 	"github.com/gorilla/mux"
 	"net/http"
 	util "officetime-api/internal/util"
 	"officetime-api/pkg/api/endpoints"
-	"strconv"
 )
 
 //var logger log.Logger
@@ -111,6 +109,108 @@ func NewHTTPHandler(ep endpoints.Set) http.Handler {
 			),
 		)
 
+	api1.Methods(http.MethodGet).
+		Path("/period").
+		Handler(
+			httptransport.NewServer(
+				ep.GetPeriodsEndpoint,
+				decodeHTTPGetPeriodsRequest,
+				encodeResponse,
+				opts...,
+			),
+		)
+	api1.Methods(http.MethodGet).
+		Path("/period/{periodId}").
+		Handler(
+			httptransport.NewServer(
+				ep.GetPeriodEndpoint,
+				decodeHTTPGetPeriodRequest,
+				encodeResponse,
+				opts...,
+			),
+		)
+	api1.Methods(http.MethodPost).
+		Path("/period").
+		Handler(
+			httptransport.NewServer(
+				ep.CreatePeriodEndpoint,
+				decodeHTTPCreatePeriodRequest,
+				encodeResponse,
+				opts...,
+			),
+		)
+	api1.Methods(http.MethodPut).
+		Path("/period/{periodId}").
+		Handler(
+			httptransport.NewServer(
+				ep.UpdatePeriodEndpoint,
+				decodeHTTPUpdatePeriodRequest,
+				encodeResponse,
+				opts...,
+			),
+		)
+	api1.Methods(http.MethodDelete).
+		Path("/period/{periodId}").
+		Handler(
+			httptransport.NewServer(
+				ep.DeletePeriodEndpoint,
+				decodeHTTPDeletePeriodRequest,
+				encodeResponse,
+				opts...,
+			),
+		)
+
+	api1.Methods(http.MethodGet).
+		Path("/department").
+		Handler(
+			httptransport.NewServer(
+				ep.GetDepartmentsEndpoint,
+				decodeHTTPGetDepartmentsRequest,
+				encodeResponse,
+				opts...,
+			),
+		)
+	api1.Methods(http.MethodGet).
+		Path("/department/{departmentId}").
+		Handler(
+			httptransport.NewServer(
+				ep.GetDepartmentEndpoint,
+				decodeHTTPGetDepartmentRequest,
+				encodeResponse,
+				opts...,
+			),
+		)
+	api1.Methods(http.MethodPost).
+		Path("/department").
+		Handler(
+			httptransport.NewServer(
+				ep.CreateDepartmentEndpoint,
+				decodeHTTPCreateDepartmentRequest,
+				encodeResponse,
+				opts...,
+			),
+		)
+	api1.Methods(http.MethodPut).
+		Path("/department/{departmentId}").
+		Handler(
+			httptransport.NewServer(
+				ep.UpdateDepartmentEndpoint,
+				decodeHTTPUpdateDepartmentRequest,
+				encodeResponse,
+				opts...,
+			),
+		)
+	api1.Methods(http.MethodDelete).
+		Path("/department/{departmentId}").
+		Handler(
+			httptransport.NewServer(
+				ep.DeleteDepartmentEndpoint,
+				decodeHTTPDeleteDepartmentRequest,
+				encodeResponse,
+				opts...,
+			),
+		)
+
 	return router
 }
 
@@ -129,76 +229,6 @@ func decodeHTTPLoginRequest(_ context.Context, r *http.Request) (interface{}, er
 
 func decodeHTTPServiceStatusRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	var req endpoints.ServiceStatusRequest
-	return req, nil
-}
-
-func decodeHTTPGetRoutersRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var req endpoints.GetRoutersRequest
-	if r.ContentLength == 0 {
-		//logger.Log("Get request with no body")
-		return req, nil
-	}
-	err := json.NewDecoder(r.Body).Decode(&req)
-	if err != nil {
-		return nil, err
-	}
-	return req, nil
-}
-
-func decodeHTTPGetRouterRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var req endpoints.GetRouterRequest
-	params := mux.Vars(r)
-
-	routerId, err := strconv.Atoi(params["routerId"])
-	if err != nil {
-		return nil, fmt.Errorf("invalid path param router identifier")
-	}
-
-	req.RouterId = routerId
-
-	return req, nil
-}
-
-func decodeHTTPCreateRouterRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var req endpoints.CreateRouterRequest
-
-	err := json.NewDecoder(r.Body).Decode(&req.Router)
-	if err != nil {
-		return nil, fmt.Errorf(fmt.Sprintf("error decode json body: %v", err))
-	}
-
-	return req, nil
-}
-
-func decodeHTTPUpdateRouterRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var req endpoints.UpdateRouterRequest
-	params := mux.Vars(r)
-
-	routerId, err := strconv.Atoi(params["routerId"])
-	if err != nil {
-		return nil, fmt.Errorf("invalid path param router identifier")
-	}
-	req.RouterId = routerId
-
-	err = json.NewDecoder(r.Body).Decode(&req.Router)
-	if err != nil {
-		return nil, fmt.Errorf(fmt.Sprintf("error decode json body: %v", err))
-	}
-
-	return req, nil
-}
-
-func decodeHTTPDeleteRouterRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var req endpoints.DeleteRouterRequest
-	params := mux.Vars(r)
-
-	routerId, err := strconv.Atoi(params["routerId"])
-	if err != nil {
-		return nil, fmt.Errorf("invalid path param router identifier")
-	}
-
-	req.RouterId = routerId
-
 	return req, nil
 }
 

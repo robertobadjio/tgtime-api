@@ -12,9 +12,9 @@ type GetRouter struct {
 
 type GetRouterHandler decorator.QueryHandler[GetRouter, *router.Router]
 
-type GetRouterReadModel interface {
+/*type GetRouterReadModel interface {
 	GetRouter(ctx context.Context, routerId int) (*router.Router, error)
-}
+}*/
 
 type getRouterHandler struct {
 	routerRepo router.Repository

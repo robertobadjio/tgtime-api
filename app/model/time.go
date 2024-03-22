@@ -6,9 +6,16 @@ import (
 	"log"
 	"math"
 	"officetime-api/internal/db"
-	"officetime-api/internal/model/router/adapter"
+	departmentAdapter "officetime-api/internal/model/department/adapter"
+	departmentApp "officetime-api/internal/model/department/app"
+	departmentQuery "officetime-api/internal/model/department/app/query"
+	periodAdapter "officetime-api/internal/model/period/adapter"
+	periodApp "officetime-api/internal/model/period/app"
+	periodQuery "officetime-api/internal/model/period/app/query"
+	p "officetime-api/internal/model/period/domain/period"
+	routerAdapter "officetime-api/internal/model/router/adapter"
 	routerApp "officetime-api/internal/model/router/app"
-	"officetime-api/internal/model/router/app/query"
+	routerQuery "officetime-api/internal/model/router/app/query"
 	"officetime-api/internal/model/router/domain/router"
 	"time"
 )
@@ -76,14 +83,30 @@ type Time struct {
 	Routers   []RouterResponse `json:"routers"`
 }
 
-var app routerApp.Application
+var rApp routerApp.Application
+var pApp periodApp.Application
+var dApp departmentApp.Application
 
 func init() {
-	routerRepository := adapter.NewPgRouterRepository(db.GetDB())
-	app = routerApp.Application{
+	routerRepository := routerAdapter.NewPgRouterRepository(db.GetDB())
+	rApp = routerApp.Application{
 		Queries: routerApp.Queries{
-			GetRouter:  query.NewGetRouterHandler(routerRepository),
-			GetRouters: query.NewGetRoutersHandler(routerRepository),
+			GetRouter:  routerQuery.NewGetRouterHandler(routerRepository),
+			GetRouters: routerQuery.NewGetRoutersHandler(routerRepository),
+		},
+	}
+
+	periodRepository := periodAdapter.NewPgPeriodRepository(db.GetDB())
+	pApp = periodApp.Application{
+		Queries: periodApp.Queries{
+			GetPeriods: periodQuery.NewGetPeriodsHandler(periodRepository),
+		},
+	}
+
+	departmentRepository := departmentAdapter.NewPgDepartmentRepository(db.GetDB())
+	dApp = departmentApp.Application{
+		Queries: departmentApp.Queries{
+			GetDepartments: departmentQuery.NewGetDepartmentsHandler(departmentRepository),
 		},
 	}
 }
@@ -94,23 +117,24 @@ const TotalWorkingDayInSeconds = 8 * 60 * 60 // TODO: Сколько должн�
 // Стаститика. Общее время по периоду по всем сотрудникам
 // TODO: Ограничить 7 последними периодами
 func GetAllTimesByPeriodsAndRouters() *StatByPeriodsAndRouters {
-	qr := query.GetRouters{}
+	qrRouter := routerQuery.GetRouters{}
 	ctx := context.TODO()
-	routers, _ := app.Queries.GetRouters.Handle(ctx, qr) // TODO: Handle error
+	routers, _ := rApp.Queries.GetRouters.Handle(ctx, qrRouter) // TODO: Handle error
 
-	periods := GetAllPeriods()
+	qrPeriod := periodQuery.GetPeriods{}
+	periods, _ := pApp.Queries.GetPeriods.Handle(ctx, qrPeriod) // TODO: Handle error
 
 	stat := new(StatByPeriodsAndRouters)
-	for _, router := range routers {
+	for _, r := range routers {
 		statRouter := new(StatRouter)
-		statRouter.Id = router.Id
-		statRouter.Name = router.Name
+		statRouter.Id = r.Id
+		statRouter.Name = r.Name
 		statRouter.NumEmployees = len(GetAllUsers(0, 0).Users) // TODO: Количество сотрудников у которых есть доступ к роутеру
 		for _, period := range periods {
 			tempPeriod := make(map[string]interface{})
 			tempPeriod["id"] = period.Id
 			tempPeriod["name"] = period.Name
-			tempPeriod["total"] = getTotalTimeByPeriodAndRouter(period, router.Id)
+			tempPeriod["total"] = getTotalTimeByPeriodAndRouter(period, r.Id)
 			tempPeriod["totalWorkTime"] = 20 * 8 * 60 * 60 // TODO: Общее рабочее время по периоду + обед, взять из производственного календаря
 
 			statRouter.Periods = append(statRouter.Periods, tempPeriod)
@@ -124,11 +148,13 @@ func GetAllTimesByPeriodsAndRouters() *StatByPeriodsAndRouters {
 // GetAllTimesDepartmentsByDate
 // Стаститика. Общее время за день по отделам
 func GetAllTimesDepartmentsByDate(date time.Time) *StatDepartments {
-	departments := GetAllDepartments()
-
-	qr := query.GetRouters{}
 	ctx := context.TODO()
-	routers, _ := app.Queries.GetRouters.Handle(ctx, qr) // TODO: Handle error
+
+	qrDepartments := routerQuery.GetRouters{}
+	departments, _ := dApp.Queries.GetDepartments.Handle(ctx, qrDepartments) // TODO: Handle error
+
+	qrRouters := routerQuery.GetRouters{}
+	routers, _ := rApp.Queries.GetRouters.Handle(ctx, qrRouters) // TODO: Handle error
 
 	data := new(StatDepartments)
 	for _, department := range departments {
@@ -139,9 +165,9 @@ func GetAllTimesDepartmentsByDate(date time.Time) *StatDepartments {
 		item.NumEmployees = len(employees)
 		item.Total = 0
 		item.TotalDay = TotalWorkingDayInSeconds
-		for _, router := range routers {
+		for _, routerM := range routers {
 			for _, employee := range employees {
-				times := GetAllByDate(employee.MacAddress, date, router.Id)
+				times := GetAllByDate(employee.MacAddress, date, routerM.Id)
 				item.Total += AggregateDayTotalTime(times)
 			}
 		}
@@ -151,7 +177,7 @@ func GetAllTimesDepartmentsByDate(date time.Time) *StatDepartments {
 	return data
 }
 
-func getTotalTimeByPeriodAndRouter(period *Period, routerId int) int64 {
+func getTotalTimeByPeriodAndRouter(period *p.Period, routerId int) int64 {
 	var totalSeconds int64
 	users := GetAllUsers(0, 0)
 	for _, user := range users.Users {
@@ -270,7 +296,7 @@ func GetTimeByPeriod(userId, period int) PeriodUser {
 	}
 
 	row = Db.QueryRow("SELECT id, name, year, begin_at, ended_at FROM period WHERE id = $1", period)
-	periodStruct := new(Period)
+	periodStruct := new(p.Period)
 	err = row.Scan(&periodStruct.Id, &periodStruct.Name, &periodStruct.Year, &periodStruct.BeginDate, &periodStruct.EndDate)
 	if err != nil {
 		panic(err)
@@ -286,9 +312,9 @@ func GetTimeByPeriod(userId, period int) PeriodUser {
 		end = now
 	}
 
-	qr := query.GetRouters{}
+	qr := routerQuery.GetRouters{}
 	ctx := context.TODO()
-	routers, _ := app.Queries.GetRouters.Handle(ctx, qr) // TODO: Handle error
+	routers, _ := rApp.Queries.GetRouters.Handle(ctx, qr) // TODO: Handle error
 
 	weekend := GetWeekendByPeriod(begin, end)
 	for curr := begin; curr.Before(end); curr = curr.AddDate(0, 0, 1) {
@@ -351,9 +377,9 @@ func GetTimeDayAll(userId int, date time.Time) Time {
 	timeOutput.Break = GetAllBreaksByTimesOld(times)
 
 	// Собираем routers
-	qr := query.GetRouters{}
+	qr := routerQuery.GetRouters{}
 	ctx := context.TODO()
-	routers, _ := app.Queries.GetRouters.Handle(ctx, qr) // TODO: Handle error
+	routers, _ := rApp.Queries.GetRouters.Handle(ctx, qr) // TODO: Handle error
 
 	var responseRouters []RouterResponse
 	for _, router := range routers {
@@ -434,7 +460,9 @@ type statWorkingPeriod struct {
 }
 
 func GetStatWorkingPeriod(userId, periodId int) *statWorkingPeriod {
-	period, _ := GetPeriodById(periodId)
+	qrPeriod := periodQuery.GetPeriod{PeriodId: periodId}
+	ctx := context.TODO()
+	period, _ := pApp.Queries.GetPeriod.Handle(ctx, qrPeriod) // TODO: Handle error
 
 	periodUser := GetTimeByPeriod(userId, periodId)
 	var totalMonthWorkingTime int64

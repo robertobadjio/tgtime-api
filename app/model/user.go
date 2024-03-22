@@ -106,8 +106,6 @@ func GetUserByEmail(email string) (*User, error) {
 	return user, nil
 }
 
-
-
 // GetUsersByDepartment
 // Список сотрудников по отделу
 func GetUsersByDepartment(departmentId int) ([]*User, error) {

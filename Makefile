@@ -19,7 +19,19 @@ export GOARCH=amd64
 help: ## Help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(firstword $(MAKEFILE_LIST)) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
-up: ## Start services
+fmt: ## Automatically format source code
+	go fmt ./...
+.PHONY:fmt
+
+lint: fmt ## Check code (lint)
+	golint ./...
+.PHONY:lint
+
+vet: fmt ## Check code (vet)
+	go vet ./...
+.PHONY:vet
+
+up: vet ## Start services
 	$(DOCKER_COMPOSE) up -d $(SERVICES)
 
 build: ## Build service containers

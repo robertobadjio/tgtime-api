@@ -7,14 +7,13 @@ import (
 )
 
 type GetRouters struct {
-	RouterId int
 }
 
 type GetRoutersHandler decorator.QueryHandler[GetRouters, []*router.Router]
 
-type GetRoutersReadModel interface {
+/*type GetRoutersReadModel interface {
 	GetRouters(ctx context.Context) ([]*router.Router, error)
-}
+}*/
 
 type getRoutersHandler struct {
 	routerRepo router.Repository
