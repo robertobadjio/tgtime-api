@@ -1,14 +1,18 @@
 package dao
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"io/ioutil"
 	"net/http"
-	"officetime-api/app/model"
 	"officetime-api/app/service"
 	"officetime-api/internal/config"
+	"officetime-api/internal/db"
+	"officetime-api/internal/model/user/adapter"
+	userApp "officetime-api/internal/model/user/app"
+	"officetime-api/internal/model/user/app/query"
 	"strconv"
 	"time"
 )
@@ -57,13 +61,18 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	user, err := model.GetUserByEmail(data.Email)
+	uApp := buildUserApp()
+	qr := query.GetUserByEmail{Email: data.Email}
+	ctx := context.TODO()
+	user, err := uApp.Queries.GetUserByEmail.Handle(ctx, qr)
 	if err != nil {
 		fmt.Fprintf(w, err.Error())
 		return
 	}
 
-	userPasswordHash := model.GetUserPasswordHashByEmail(user.Email) // TODO: Убрать
+	qr2 := query.GetUserPasswordHashByEmail{Email: user.Email}
+	// TODO: Hadle error
+	userPasswordHash, _ := uApp.Queries.GetUserPasswordHashByEmail.Handle(ctx, qr2) // TODO: Убрать
 	if !service.CheckAuth(userPasswordHash, data.Password) {
 		fmt.Fprintf(w, "Wrong password")
 		return
@@ -119,9 +128,23 @@ func Refresh(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		user, _ := model.GetUser(userId)
+		qr := query.GetUser{UserId: int(userId)}
+		ctx := context.TODO()
+		app := buildUserApp()
+		u, _ := app.Queries.GetUser.Handle(ctx, qr) // TODO: Handle error
 		// Create new pairs of refresh and access tokens
 
-		json.NewEncoder(w).Encode(service.CreateTokenPair(user)) // TODO: обработка ошибки, если пользователь не найден
+		json.NewEncoder(w).Encode(service.CreateTokenPair(u)) // TODO: обработка ошибки, если пользователь не найден
+	}
+}
+
+func buildUserApp() userApp.Application {
+	userRepository := adapter.NewPgUserRepository(db.GetDB())
+	return userApp.Application{
+		Queries: userApp.Queries{
+			GetUser:                    query.NewGetUserHandler(userRepository),
+			GetUserByEmail:             query.NewGetUserByEmailHandler(userRepository),
+			GetUserPasswordHashByEmail: query.NewGetUserPasswordHashByEmailHandler(userRepository),
+		},
 	}
 }

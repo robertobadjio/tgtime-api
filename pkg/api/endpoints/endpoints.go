@@ -30,6 +30,12 @@ type Set struct {
 	DeleteDepartmentEndpoint endpoint.Endpoint
 
 	GetWeekendsEndpoint endpoint.Endpoint
+
+	GetUserEndpoint    endpoint.Endpoint
+	GetUsersEndpoint   endpoint.Endpoint
+	CreateUserEndpoint endpoint.Endpoint
+	UpdateUserEndpoint endpoint.Endpoint
+	DeleteUserEndpoint endpoint.Endpoint
 }
 
 func NewEndpointSet(svc api.Service) Set {
@@ -57,6 +63,12 @@ func NewEndpointSet(svc api.Service) Set {
 		DeleteDepartmentEndpoint: MakeDeleteDepartmentEndpoint(svc),
 
 		GetWeekendsEndpoint: MakeGetWeekendsEndpoint(svc),
+
+		GetUserEndpoint:    MakeGetUserEndpoint(svc),
+		GetUsersEndpoint:   MakeGetUsersEndpoint(svc),
+		CreateUserEndpoint: MakeCreateUserEndpoint(svc),
+		UpdateUserEndpoint: MakeUpdateUserEndpoint(svc),
+		DeleteUserEndpoint: MakeDeleteUserEndpoint(svc),
 	}
 }
 
@@ -261,5 +273,63 @@ func MakeGetWeekendsEndpoint(svc api.Service) endpoint.Endpoint {
 			return GetWeekendsResponse{Weekends: weekends}, nil
 		}
 		return GetWeekendsResponse{Weekends: weekends}, nil
+	}
+}
+
+func MakeGetUserEndpoint(svc api.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(GetUserRequest)
+		user, err := svc.GetUser(ctx, req.UserId)
+		if err != nil {
+			return GetUserResponse{}, err
+		}
+		return GetUserResponse{User: user}, nil
+	}
+}
+
+func MakeGetUsersEndpoint(svc api.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(GetUsersRequest)
+		users, err := svc.GetUsers(ctx, req.Offset, req.Limit)
+		if err != nil {
+			return GetUsersResponse{Users: users}, nil
+		}
+		return GetUsersResponse{Users: users}, nil
+	}
+}
+
+func MakeCreateUserEndpoint(svc api.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(CreateUserRequest)
+		user, err := svc.CreateUser(ctx, req.User)
+		if err != nil {
+			return CreateUserResponse{}, err
+		}
+		return CreateUserResponse{User: user}, nil
+	}
+}
+
+func MakeUpdateUserEndpoint(svc api.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(UpdateUserRequest)
+		if req.UserId != req.User.Id {
+			// TODO: Error
+		}
+		user, err := svc.UpdateUser(ctx, req.User)
+		if err != nil {
+			return UpdateUserResponse{}, err
+		}
+		return UpdateUserResponse{User: user}, nil
+	}
+}
+
+func MakeDeleteUserEndpoint(svc api.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(DeleteUserRequest)
+		err := svc.DeleteUser(ctx, req.UserId)
+		if err != nil {
+			return DeleteUserResponse{}, err
+		}
+		return DeleteUserResponse{}, nil
 	}
 }

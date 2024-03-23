@@ -6,6 +6,7 @@ import (
 	"officetime-api/internal/model/department/domain/department"
 	"officetime-api/internal/model/period/domain/period"
 	"officetime-api/internal/model/router/domain/router"
+	"officetime-api/internal/model/user/domain/user"
 )
 
 type Service interface {
@@ -35,15 +36,15 @@ type Service interface {
 
 	GetWeekends(ctx context.Context) ([]string, error)
 
+	GetUsers(ctx context.Context, offset, limit int) ([]*user.User, error)
+	GetUser(ctx context.Context, userId int) (*user.User, error)
+	UpdateUser(ctx context.Context, user *user.User) (*user.User, error)
+	CreateUser(ctx context.Context, user *user.User) (*user.User, error)
+	DeleteUser(ctx context.Context, userId int) error
+
 	/*GetTimeDayAll(ctx context.Context) (int, error)
 	TimeDGetTimeByPeriodayAll(ctx context.Context) (int, error)
 	CreateTime(ctx context.Context) (int, error)
-
-	GetAllUsers(ctx context.Context) (int, error)
-	GetUser(ctx context.Context) (int, error)
-	UpdateUser(ctx context.Context) (int, error)
-	CreateUser(ctx context.Context) (int, error)
-	CreatDeleteUsereUser(ctx context.Context) (int, error)
 
 	GetStatByPeriodsAndRouters(ctx context.Context) (int, error)
 	GetAllTimesDepartmentsByDate(ctx context.Context) (int, error)

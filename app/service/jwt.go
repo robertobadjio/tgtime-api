@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"net/http"
-	"officetime-api/app/model"
 	"officetime-api/internal/config"
+	"officetime-api/internal/model/user/domain/user"
 	"strconv"
 	"strings"
 	"time"
@@ -27,7 +27,7 @@ type TokenDetails struct {
 	RefreshTokenExpires int64  `json:"refresh_token_expires"`
 }
 
-func CreateTokenPair(user *model.User) *TokenDetails {
+func CreateTokenPair(u *user.User) *TokenDetails {
 	cfg := config.New()
 	td := &TokenDetails{}
 	td.AccessTokenExpires = time.Now().Add(time.Minute * time.Duration(cfg.AuthAccessTokenExpires)).Unix()
@@ -39,16 +39,16 @@ func CreateTokenPair(user *model.User) *TokenDetails {
 	accessTokenClaims := token.Claims.(jwt.MapClaims)
 	// Устанавливаем набор параметров для токена
 	accessTokenClaims["authorized"] = true
-	accessTokenClaims["userId"] = user.Id
-	accessTokenClaims["userFirstname"] = user.Name
-	accessTokenClaims["userSurname"] = user.Surname
-	accessTokenClaims["userLastname"] = user.Lastname
-	accessTokenClaims["userEmail"] = user.Email
-	accessTokenClaims["userBirthDate"] = user.BirthDate
+	accessTokenClaims["userId"] = u.Id
+	accessTokenClaims["userFirstname"] = u.Name
+	accessTokenClaims["userSurname"] = u.Surname
+	accessTokenClaims["userLastname"] = u.Lastname
+	accessTokenClaims["userEmail"] = u.Email
+	accessTokenClaims["userBirthDate"] = u.BirthDate
 	accessTokenClaims["exp"] = td.AccessTokenExpires
-	accessTokenClaims["role"] = user.Role // TODO: костыль, RBAC?
-	accessTokenClaims["department"] = user.Department
-	accessTokenClaims["position"] = user.Position
+	accessTokenClaims["role"] = u.Role // TODO: костыль, RBAC?
+	accessTokenClaims["department"] = u.Department
+	accessTokenClaims["position"] = u.Position
 
 	// Подписываем токен нашим секретным ключем
 	var err error
@@ -59,7 +59,7 @@ func CreateTokenPair(user *model.User) *TokenDetails {
 
 	// Creating Refresh Token
 	refreshTokenClaims := jwt.MapClaims{}
-	refreshTokenClaims["userId"] = user.Id
+	refreshTokenClaims["userId"] = u.Id
 	refreshTokenClaims["exp"] = td.RefreshTokenExpires
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshTokenClaims)
 	td.RefreshToken, err = refreshToken.SignedString([]byte(cfg.AuthRefreshKey))

@@ -1,9 +1,16 @@
 package aggregator
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"officetime-api/app/model"
+	"officetime-api/internal/db"
+	userAdapter "officetime-api/internal/model/user/adapter"
+	userApp "officetime-api/internal/model/user/app"
+	userCommand "officetime-api/internal/model/user/app/command"
+	userCommandQuery "officetime-api/internal/model/user/app/command_query"
+	userQuery "officetime-api/internal/model/user/app/query"
 	"time"
 )
 
@@ -13,7 +20,12 @@ func AggregateTime() {
 	moscowLocation, _ := time.LoadLocation("Europe/Moscow")
 	date := time.Now().AddDate(0, 0, -1).In(moscowLocation)
 
-	for _, user := range model.GetAllUsers(0, 0).Users {
+	uApp := buildUserApp()
+	qr := userQuery.GetUsers{Offset: 0, Limit: 0}
+	ctx := context.TODO()
+	users, _ := uApp.Queries.GetUsers.Handle(ctx, qr) // TODO: Handle error
+
+	for _, user := range users {
 		times := model.GetAllByDate(user.MacAddress, date, 0)
 		seconds := model.AggregateDayTotalTime(times)
 		breaks := model.GetAllBreaksByTimesOld(times)
@@ -25,5 +37,22 @@ func AggregateTime() {
 		if err != nil {
 			panic(err)
 		}
+	}
+}
+
+func buildUserApp() userApp.Application {
+	userRepository := userAdapter.NewPgUserRepository(db.GetDB())
+	return userApp.Application{
+		Commands: userApp.Commands{
+			UpdateUser: userCommand.NewUpdateUserHandler(userRepository),
+			DeleteUser: userCommand.NewDeleteUserHandler(userRepository),
+		},
+		Queries: userApp.Queries{
+			GetUser:  userQuery.NewGetUserHandler(userRepository),
+			GetUsers: userQuery.NewGetUsersHandler(userRepository),
+		},
+		CommandsQueries: userApp.CommandsQueries{
+			CreateUser: userCommandQuery.NewCreateUserHandler(userRepository),
+		},
 	}
 }

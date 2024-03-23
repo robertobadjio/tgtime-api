@@ -4,6 +4,7 @@ import (
 	"officetime-api/internal/model/department/domain/department"
 	"officetime-api/internal/model/period/domain/period"
 	"officetime-api/internal/model/router/domain/router"
+	"officetime-api/internal/model/user/domain/user"
 )
 
 type LoginRequest struct {
@@ -123,3 +124,37 @@ type GetWeekendsRequest struct{}
 type GetWeekendsResponse struct {
 	Weekends []string `json:"weekends"`
 }
+
+type GetUsersRequest struct {
+	Offset, Limit int
+}
+type GetUsersResponse struct {
+	Users []*user.User `json:"users"`
+}
+
+type GetUserRequest struct {
+	UserId int `json:"user_id"`
+}
+type GetUserResponse struct {
+	User *user.User `json:"user"`
+}
+
+type CreateUserRequest struct {
+	User *user.User `json:"user"`
+}
+type CreateUserResponse struct {
+	User *user.User `json:"user"`
+}
+
+type UpdateUserRequest struct {
+	UserId int        `json:"user_id"`
+	User   *user.User `json:"user"`
+}
+type UpdateUserResponse struct {
+	User *user.User `json:"user"`
+}
+
+type DeleteUserRequest struct {
+	UserId int `json:"user_id"`
+}
+type DeleteUserResponse struct{}

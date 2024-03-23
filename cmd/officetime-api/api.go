@@ -25,6 +25,11 @@ import (
 	routerCommand "officetime-api/internal/model/router/app/command"
 	routerCommandQuery "officetime-api/internal/model/router/app/command_query"
 	routerQuery "officetime-api/internal/model/router/app/query"
+	userAdapter "officetime-api/internal/model/user/adapter"
+	userApp "officetime-api/internal/model/user/app"
+	userCommand "officetime-api/internal/model/user/app/command"
+	userCommandQuery "officetime-api/internal/model/user/app/command_query"
+	userQuery "officetime-api/internal/model/user/app/query"
 	weekendAdapter "officetime-api/internal/model/weekend/adapter"
 	weekendApp "officetime-api/internal/model/weekend/app"
 	weekendQuery "officetime-api/internal/model/weekend/app/query"
@@ -122,8 +127,26 @@ func main() {
 		},
 	}
 
+	userRepository := userAdapter.NewPgUserRepository(db.GetDB())
+	uApp := userApp.Application{
+		Commands: userApp.Commands{
+			UpdateUser: userCommand.NewUpdateUserHandler(userRepository),
+			DeleteUser: userCommand.NewDeleteUserHandler(userRepository),
+		},
+		Queries: userApp.Queries{
+			GetUser:                    userQuery.NewGetUserHandler(userRepository),
+			GetUsers:                   userQuery.NewGetUsersHandler(userRepository),
+			GetUserByEmail:             userQuery.NewGetUserByEmailHandler(userRepository),
+			GetUsersByDepartment:       userQuery.NewGetUsersByDepartmentHandler(userRepository),
+			GetUserPasswordHashByEmail: userQuery.NewGetUserPasswordHashByEmailHandler(userRepository),
+		},
+		CommandsQueries: userApp.CommandsQueries{
+			CreateUser: userCommandQuery.NewCreateUserHandler(userRepository),
+		},
+	}
+
 	var (
-		s           = api.NewService(rApp, pApp, dApp, wApp)
+		s           = api.NewService(rApp, pApp, dApp, wApp, uApp)
 		eps         = endpoints.NewEndpointSet(s)
 		httpHandler = transport.NewHTTPHandler(eps)
 		grpcServer  = transport.NewGRPCServer(eps)
@@ -191,17 +214,9 @@ func main() {
 	router.Handle("/api-service/time/{id}/period/{period}", isAuthorized(dao.GetTimeByPeriod)).Methods("GET")
 	router.Handle("/api-service/time", isAuthorized(dao.CreateTime)).Methods("POST")
 
-	router.Handle("/api-service/user", isAuthorized(dao.GetAllUsers)).Methods("GET")
-	router.Handle("/api-service/user/{id}", isAuthorized(dao.GetUser)).Methods("GET")
-	router.Handle("/api-service/user/{id}", isAuthorized(dao.UpdateUser)).Methods("PATCH")
-	router.Handle("/api-service/user", isAuthorized(dao.CreateUser)).Methods("POST")
-	router.Handle("/api-service/user/{id}", isAuthorized(dao.DeleteUser)).Methods("DELETE")
-
 	router.Handle("/api-service/stat/periods-and-routers", isAuthorized(dao.GetStatByPeriodsAndRouters)).Methods("GET")
 	router.Handle("/api-service/stat/departments/{date}", isAuthorized(dao.GetAllTimesDepartmentsByDate)).Methods("GET")
 	router.Handle("/api-service/stat/working-period/{id}/period/{period}", isAuthorized(dao.GetStatWorkingPeriod)).Methods("GET")
-
-	router.Handle("/api-service/weekend", isAuthorized(dao.GetWeekend)).Methods("GET")
 
 	log.Fatal(http.ListenAndServe(":"+cfg.HttpPort, c.Handler(router)))*/
 }

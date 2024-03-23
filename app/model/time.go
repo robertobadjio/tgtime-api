@@ -17,6 +17,9 @@ import (
 	routerApp "officetime-api/internal/model/router/app"
 	routerQuery "officetime-api/internal/model/router/app/query"
 	"officetime-api/internal/model/router/domain/router"
+	userAdapter "officetime-api/internal/model/user/adapter"
+	userApp "officetime-api/internal/model/user/app"
+	userQuery "officetime-api/internal/model/user/app/query"
 	weekendAdapter "officetime-api/internal/model/weekend/adapter"
 	weekendApp "officetime-api/internal/model/weekend/app"
 	weekendQuery "officetime-api/internal/model/weekend/app/query"
@@ -90,6 +93,7 @@ var rApp routerApp.Application
 var pApp periodApp.Application
 var dApp departmentApp.Application
 var wApp weekendApp.Application
+var uApp userApp.Application
 
 func init() {
 	routerRepository := routerAdapter.NewPgRouterRepository(db.GetDB())
@@ -120,6 +124,14 @@ func init() {
 			GetWeekends: weekendQuery.NewGetWeekendsHandler(weekendRepository),
 		},
 	}
+
+	userRepository := userAdapter.NewPgUserRepository(db.GetDB())
+	uApp = userApp.Application{
+		Queries: userApp.Queries{
+			GetUsers:             userQuery.NewGetUsersHandler(userRepository),
+			GetUsersByDepartment: userQuery.NewGetUsersByDepartmentHandler(userRepository),
+		},
+	}
 }
 
 const TotalWorkingDayInSeconds = 8 * 60 * 60 // TODO: Сколько должно быть отработано в день
@@ -135,12 +147,15 @@ func GetAllTimesByPeriodsAndRouters() *StatByPeriodsAndRouters {
 	qrPeriod := periodQuery.GetPeriods{}
 	periods, _ := pApp.Queries.GetPeriods.Handle(ctx, qrPeriod) // TODO: Handle error
 
+	qr := userQuery.GetUsers{Offset: 0, Limit: 0}
+	users, _ := uApp.Queries.GetUsers.Handle(ctx, qr) // TODO: Handle error
+
 	stat := new(StatByPeriodsAndRouters)
 	for _, r := range routers {
 		statRouter := new(StatRouter)
 		statRouter.Id = r.Id
 		statRouter.Name = r.Name
-		statRouter.NumEmployees = len(GetAllUsers(0, 0).Users) // TODO: Количество сотрудников у которых есть доступ к роутеру
+		statRouter.NumEmployees = len(users) // TODO: Количество сотрудников у которых есть доступ к роутеру
 		for _, period := range periods {
 			tempPeriod := make(map[string]interface{})
 			tempPeriod["id"] = period.Id
@@ -172,7 +187,10 @@ func GetAllTimesDepartmentsByDate(date time.Time) *StatDepartments {
 		item := new(StatDepartment)
 		item.Id = department.Id
 		item.Name = department.Name
-		employees, _ := GetUsersByDepartment(department.Id)
+
+		qr := userQuery.GetUsersByDepartment{DepartmentId: department.Id}
+		employees, _ := uApp.Queries.GetUsers.Handle(ctx, qr) // TODO: Handle error
+
 		item.NumEmployees = len(employees)
 		item.Total = 0
 		item.TotalDay = TotalWorkingDayInSeconds
@@ -190,8 +208,12 @@ func GetAllTimesDepartmentsByDate(date time.Time) *StatDepartments {
 
 func getTotalTimeByPeriodAndRouter(period *p.Period, routerId int) int64 {
 	var totalSeconds int64
-	users := GetAllUsers(0, 0)
-	for _, user := range users.Users {
+
+	ctx := context.TODO()
+	qr := userQuery.GetUsers{Offset: 0, Limit: 0}
+	users, _ := uApp.Queries.GetUsers.Handle(ctx, qr) // TODO: Handle error
+
+	for _, user := range users {
 		rows, err := Db.Query("SELECT t.mac_address, t.second, t.router_id FROM time t WHERE t.router_id = $1 AND t.second BETWEEN $2 AND $3 AND t.mac_address = $4", routerId, GetSecondsByBeginDate(period.BeginDate), GetSecondsByEndDate(period.EndDate), user.MacAddress)
 		if err != nil {
 			panic(err)
