@@ -19,7 +19,8 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Api_GetRouters_FullMethodName = "/pb.Api/GetRouters"
+	Api_GetRouters_FullMethodName       = "/pb.Api/GetRouters"
+	Api_GetUserByAddress_FullMethodName = "/pb.Api/GetUserByAddress"
 )
 
 // ApiClient is the client API for Api service.
@@ -27,6 +28,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ApiClient interface {
 	GetRouters(ctx context.Context, in *GetRoutersRequest, opts ...grpc.CallOption) (*GetRoutersResponse, error)
+	GetUserByAddress(ctx context.Context, in *GetUserByMacAddressRequest, opts ...grpc.CallOption) (*GetUserByMacAddressResponse, error)
 }
 
 type apiClient struct {
@@ -46,11 +48,21 @@ func (c *apiClient) GetRouters(ctx context.Context, in *GetRoutersRequest, opts 
 	return out, nil
 }
 
+func (c *apiClient) GetUserByAddress(ctx context.Context, in *GetUserByMacAddressRequest, opts ...grpc.CallOption) (*GetUserByMacAddressResponse, error) {
+	out := new(GetUserByMacAddressResponse)
+	err := c.cc.Invoke(ctx, Api_GetUserByAddress_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ApiServer is the server API for Api service.
 // All implementations must embed UnimplementedApiServer
 // for forward compatibility
 type ApiServer interface {
 	GetRouters(context.Context, *GetRoutersRequest) (*GetRoutersResponse, error)
+	GetUserByAddress(context.Context, *GetUserByMacAddressRequest) (*GetUserByMacAddressResponse, error)
 	mustEmbedUnimplementedApiServer()
 }
 
@@ -60,6 +72,9 @@ type UnimplementedApiServer struct {
 
 func (UnimplementedApiServer) GetRouters(context.Context, *GetRoutersRequest) (*GetRoutersResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetRouters not implemented")
+}
+func (UnimplementedApiServer) GetUserByAddress(context.Context, *GetUserByMacAddressRequest) (*GetUserByMacAddressResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUserByAddress not implemented")
 }
 func (UnimplementedApiServer) mustEmbedUnimplementedApiServer() {}
 
@@ -92,6 +107,24 @@ func _Api_GetRouters_Handler(srv interface{}, ctx context.Context, dec func(inte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Api_GetUserByAddress_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetUserByMacAddressRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ApiServer).GetUserByAddress(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Api_GetUserByAddress_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ApiServer).GetUserByAddress(ctx, req.(*GetUserByMacAddressRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Api_ServiceDesc is the grpc.ServiceDesc for Api service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -102,6 +135,10 @@ var Api_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetRouters",
 			Handler:    _Api_GetRouters_Handler,
+		},
+		{
+			MethodName: "GetUserByAddress",
+			Handler:    _Api_GetUserByAddress_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

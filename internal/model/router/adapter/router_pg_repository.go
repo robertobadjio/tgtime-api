@@ -70,12 +70,12 @@ func (prr PgRouterRepository) UpdateRouter(_ context.Context, router *router.Rou
 }
 
 func (prr PgRouterRepository) GetRouter(_ context.Context, routerId int) (*router.Router, error) {
-	router := new(router.Router)
+	r := new(router.Router)
 	if err := prr.db.QueryRow(
 		"SELECT id, name, description, address, login, password, status, work_time FROM router WHERE id = $1",
 		routerId,
-	).Scan(&router.Id, &router.Name, &router.Description, &router.Address, &router.Login, &router.Password, &router.Status, &router.WorkTime); err == nil {
-		return router, nil
+	).Scan(&r.Id, &r.Name, &r.Description, &r.Address, &r.Login, &r.Password, &r.Status, &r.WorkTime); err == nil {
+		return r, nil
 	} else if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	} else {

@@ -1,6 +1,6 @@
 package model
 
-import (
+/*import (
 	"context"
 	"database/sql"
 	"log"
@@ -234,7 +234,7 @@ func getTotalTimeByPeriodAndRouter(period *p.Period, routerId int) int64 {
 	}
 
 	return totalSeconds
-}
+}*/
 
 /*func AggregateDayTotalTime(times []*TimeUser) int64 {
 	num := 1
@@ -257,7 +257,7 @@ func getTotalTimeByPeriodAndRouter(period *p.Period, routerId int) int64 {
 }*/
 
 // AggregateDayTotalTime Подсчет общего количества секунд
-func AggregateDayTotalTime(times []*TimeUser) int64 {
+/*func AggregateDayTotalTime(times []*TimeUser) int64 {
 	var sum int64
 	for i, time := range times {
 		if i == 0 {
@@ -552,3 +552,4 @@ func getWeekdaysBetween(start, end time.Time) int {
 func GetWorkHoursBetween(start, end time.Time) int {
 	return getWeekdaysBetween(start, end) * 8
 }
+*/

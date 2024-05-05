@@ -31,11 +31,12 @@ type Set struct {
 
 	GetWeekendsEndpoint endpoint.Endpoint
 
-	GetUserEndpoint    endpoint.Endpoint
-	GetUsersEndpoint   endpoint.Endpoint
-	CreateUserEndpoint endpoint.Endpoint
-	UpdateUserEndpoint endpoint.Endpoint
-	DeleteUserEndpoint endpoint.Endpoint
+	GetUserEndpoint             endpoint.Endpoint
+	GetUserByMacAddressEndpoint endpoint.Endpoint
+	GetUsersEndpoint            endpoint.Endpoint
+	CreateUserEndpoint          endpoint.Endpoint
+	UpdateUserEndpoint          endpoint.Endpoint
+	DeleteUserEndpoint          endpoint.Endpoint
 }
 
 func NewEndpointSet(svc api.Service) Set {
@@ -64,11 +65,12 @@ func NewEndpointSet(svc api.Service) Set {
 
 		GetWeekendsEndpoint: MakeGetWeekendsEndpoint(svc),
 
-		GetUserEndpoint:    MakeGetUserEndpoint(svc),
-		GetUsersEndpoint:   MakeGetUsersEndpoint(svc),
-		CreateUserEndpoint: MakeCreateUserEndpoint(svc),
-		UpdateUserEndpoint: MakeUpdateUserEndpoint(svc),
-		DeleteUserEndpoint: MakeDeleteUserEndpoint(svc),
+		GetUserEndpoint:             MakeGetUserEndpoint(svc),
+		GetUserByMacAddressEndpoint: MakeGetUserByMacAddressEndpoint(svc),
+		GetUsersEndpoint:            MakeGetUsersEndpoint(svc),
+		CreateUserEndpoint:          MakeCreateUserEndpoint(svc),
+		UpdateUserEndpoint:          MakeUpdateUserEndpoint(svc),
+		DeleteUserEndpoint:          MakeDeleteUserEndpoint(svc),
 	}
 }
 
@@ -284,6 +286,17 @@ func MakeGetUserEndpoint(svc api.Service) endpoint.Endpoint {
 			return GetUserResponse{}, err
 		}
 		return GetUserResponse{User: user}, nil
+	}
+}
+
+func MakeGetUserByMacAddressEndpoint(svc api.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(GetUserByMacAddressRequest)
+		user, err := svc.GetUserByMacAddress(ctx, req.MacAddress)
+		if err != nil {
+			return GetUserByMacAddressResponse{}, err
+		}
+		return GetUserByMacAddressResponse{User: user}, nil
 	}
 }
 

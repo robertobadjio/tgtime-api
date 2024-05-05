@@ -40,6 +40,10 @@ type NotFoundUser struct {
 	UserEmail string
 }
 
+type NotFoundUserByMacAddress struct {
+	MacAddress string
+}
+
 type NotFoundUserOfId struct {
 	UserId int
 }
@@ -62,6 +66,10 @@ func (e *MacAddressAlreadyExists) Error() string {
 
 func (e *NotFoundUser) Error() string {
 	return fmt.Sprintf("User with email %s not found", e.UserEmail)
+}
+
+func (e *NotFoundUserByMacAddress) Error() string {
+	return fmt.Sprintf("User with mac address %s not found", e.MacAddress)
 }
 
 func (e *NotFoundUserOfId) Error() string {

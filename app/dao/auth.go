@@ -144,6 +144,7 @@ func buildUserApp() userApp.Application {
 		Queries: userApp.Queries{
 			GetUser:                    query.NewGetUserHandler(userRepository),
 			GetUserByEmail:             query.NewGetUserByEmailHandler(userRepository),
+			GetUserByMacAddress:        query.NewGetUserByMacAddressHandler(userRepository),
 			GetUserPasswordHashByEmail: query.NewGetUserPasswordHashByEmailHandler(userRepository),
 		},
 	}

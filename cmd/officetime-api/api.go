@@ -44,21 +44,16 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/oklog/oklog/pkg/group"
 	"net/http"
-	"officetime-api/app/aggregator"
-	"officetime-api/app/dao"
-	"officetime-api/app/model"
 	"officetime-api/app/service"
 	"strconv"
-	"time"
 )
 
 func main() {
 	cfg := config.New()
 
-	dao.Db = db.GetDB()
-	model.Db = db.GetDB()
-	aggregator.Db = db.GetDB()
-	go every12Day()
+	//dao.Db = db.GetDB()
+	//model.Db = db.GetDB()
+	//aggregator.Db = db.GetDB()
 
 	/*fmt.Println("Setting up server, enabling CORS...")
 	c := cors.New(cors.Options{
@@ -226,21 +221,6 @@ func commonMiddleware(next http.Handler) http.Handler {
 		w.Header().Add("Content-Type", "application/json")
 		next.ServeHTTP(w, r)
 	})
-}
-
-func every12Day() {
-	t := time.Now()
-	n := time.Date(t.Year(), t.Month(), t.Day(), 0, 1, 0, 0, t.Location())
-	d := n.Sub(t)
-	if d < 0 {
-		n = n.Add(24 * time.Hour)
-		d = n.Sub(t)
-	}
-	for {
-		time.Sleep(d)
-		d = 24 * time.Hour
-		aggregator.AggregateTime()
-	}
 }
 
 func isAuthorized(endpoint func(http.ResponseWriter, *http.Request)) http.Handler {

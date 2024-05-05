@@ -1,12 +1,11 @@
 package dao
 
-import (
+/*import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
-	"io/ioutil"
 	"net/http"
 	"officetime-api/app/model"
 	"strconv"
@@ -47,30 +46,6 @@ func GetTimeByPeriod(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(model.GetTimeByPeriod(userId, periodId))
 }
 
-func CreateTime(w http.ResponseWriter, r *http.Request) {
-	reqBody, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		fmt.Fprintf(w, "Kindly enter data with the mac address and seconds only in order to update") // TODO: Описание
-	}
-
-	var timeUser model.TimeUser
-	err = json.Unmarshal(reqBody, &timeUser)
-	if err != nil {
-		panic(err)
-	}
-
-	_, err = Db.Exec("INSERT INTO time (mac_address, second, router_id) VALUES ($1, $2, $3)", timeUser.MacAddress, timeUser.Second, timeUser.RouterId)
-	if err != nil {
-		panic(err)
-	}
-
-	w.WriteHeader(http.StatusCreated)
-	err = json.NewEncoder(w).Encode(timeUser)
-	if err != nil {
-		panic(err)
-	}
-}
-
 func buildTimeStructFromDate(date string) time.Time {
 	timeStruct, err := time.Parse("2006-01-02", date)
 	if err != nil {
@@ -79,7 +54,7 @@ func buildTimeStructFromDate(date string) time.Time {
 
 	return timeStruct
 }
-
+*/
 /*func GetAllBreaksByTimes(macAddress, date string) []*model.Break {
 	var breaksJson string
 	row := Db.QueryRow("SELECT ts.breaks FROM time_summary ts WHERE ts.mac_address = $1 AND ts.date = $2", macAddress, date)

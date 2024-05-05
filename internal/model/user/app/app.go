@@ -20,6 +20,7 @@ type Commands struct {
 type Queries struct {
 	GetUser                    query.GetUserHandler
 	GetUserByEmail             query.GetUserByEmailHandler
+	GetUserByMacAddress        query.GetUserByMacAddressHandler
 	GetUsers                   query.GetUsersHandler
 	GetUsersByDepartment       query.GetUsersByDepartmentHandler
 	GetUserPasswordHashByEmail query.GetUserPasswordHashByEmailHandler

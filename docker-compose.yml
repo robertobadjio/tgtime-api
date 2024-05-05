@@ -23,6 +23,3 @@ services:
 networks:
   officetime-api-network:
     driver: bridge
-
-volumes:
-  data:

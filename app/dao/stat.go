@@ -1,6 +1,6 @@
 package dao
 
-import (
+/*import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
@@ -37,4 +37,4 @@ func checkDate(format, date string) bool {
 		return false
 	}
 	return t.Format(format) == date
-}
+}*/

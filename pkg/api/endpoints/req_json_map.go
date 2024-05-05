@@ -139,6 +139,13 @@ type GetUserResponse struct {
 	User *user.User `json:"user"`
 }
 
+type GetUserByMacAddressRequest struct {
+	MacAddress string `json:"mac_address"`
+}
+type GetUserByMacAddressResponse struct {
+	User *user.User `json:"user"`
+}
+
 type CreateUserRequest struct {
 	User *user.User `json:"user"`
 }
