@@ -1,9 +1,9 @@
 package app
 
 import (
-	"officetime-api/internal/model/user/app/command"
-	"officetime-api/internal/model/user/app/command_query"
-	"officetime-api/internal/model/user/app/query"
+	"github.com/robertobadjio/tgtime-api/internal/model/user/app/command"
+	"github.com/robertobadjio/tgtime-api/internal/model/user/app/command_query"
+	"github.com/robertobadjio/tgtime-api/internal/model/user/app/query"
 )
 
 type Application struct {

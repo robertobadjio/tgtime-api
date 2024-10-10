@@ -8,7 +8,7 @@ import (
 	"strconv"
 )
 
-const projectDirName = "officetime-api"
+const projectDirName = "tgtime-api"
 
 type Config struct {
 	HttpPort                string

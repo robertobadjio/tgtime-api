@@ -2,8 +2,8 @@ package command_query
 
 import (
 	"context"
-	"officetime-api/internal/common/decorator"
-	"officetime-api/internal/model/router/domain/router"
+	"github.com/robertobadjio/tgtime-api/internal/common/decorator"
+	"github.com/robertobadjio/tgtime-api/internal/model/router/domain/router"
 )
 
 type CreateRouter struct {

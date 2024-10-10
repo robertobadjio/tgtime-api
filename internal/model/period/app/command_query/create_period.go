@@ -2,8 +2,8 @@ package command_query
 
 import (
 	"context"
-	"officetime-api/internal/common/decorator"
-	"officetime-api/internal/model/period/domain/period"
+	"github.com/robertobadjio/tgtime-api/internal/common/decorator"
+	"github.com/robertobadjio/tgtime-api/internal/model/period/domain/period"
 )
 
 type CreatePeriod struct {

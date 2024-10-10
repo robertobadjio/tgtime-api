@@ -1,4 +1,4 @@
-module officetime-api
+module github.com/robertobadjio/tgtime-api
 
 go 1.22.0
 

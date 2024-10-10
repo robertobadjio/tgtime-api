@@ -1,4 +1,4 @@
-name: Officetime-Api-Test
+name: TgTime API Test
 
 on:
     push:
@@ -49,9 +49,9 @@ jobs:
 
             - name: Health check
               run: |
-                docker logs --since=25m officetime-api-db
+                docker logs --since=25m tgtime-api-db
                 docker-compose ps
-                docker run --network container:officetime-api-app appropriate/curl -s --retry 10 --retry-connrefused --retry-delay 5 --retry-max-time 30 http://localhost:8081/service/status
+                docker run --network container:tgtime-api-app appropriate/curl -s --retry 10 --retry-connrefused --retry-delay 5 --retry-max-time 30 http://localhost:8081/service/status
 
             - name: Stop containers
               if: always()

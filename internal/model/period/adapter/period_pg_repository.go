@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"officetime-api/internal/model/period/domain/period"
+	"github.com/robertobadjio/tgtime-api/internal/model/period/domain/period"
 	"time"
 )
 
@@ -56,6 +56,18 @@ func (r PgPeriodRepository) GetPeriods(ctx context.Context) ([]*period.Period, e
 func (r PgPeriodRepository) GetPeriod(_ context.Context, periodId int) (*period.Period, error) {
 	periodNew := new(period.Period)
 	row := r.db.QueryRow("SELECT id, name, year, begin_at, ended_at FROM period WHERE id = $1", periodId)
+	err := row.Scan(&periodNew.Id, &periodNew.Name, &periodNew.Year, &periodNew.BeginDate, &periodNew.EndDate)
+	if err != nil {
+		return nil, fmt.Errorf("period not found")
+	}
+
+	return periodNew, nil
+}
+
+func (r PgPeriodRepository) GetPeriodCurrent(_ context.Context) (*period.Period, error) {
+	periodNew := new(period.Period)
+	curDate := time.Now()
+	row := r.db.QueryRow("SELECT id, name, year, begin_at, ended_at FROM period WHERE $1 BETWEEN begin_at AND ended_at", curDate)
 	err := row.Scan(&periodNew.Id, &periodNew.Name, &periodNew.Year, &periodNew.BeginDate, &periodNew.EndDate)
 	if err != nil {
 		return nil, fmt.Errorf("period not found")

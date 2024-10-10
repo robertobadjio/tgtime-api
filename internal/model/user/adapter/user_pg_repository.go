@@ -4,12 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"github.com/lib/pq"
+	"github.com/robertobadjio/tgtime-api/internal/db"
+	"github.com/robertobadjio/tgtime-api/internal/model/user/domain/user"
 	"golang.org/x/crypto/bcrypt"
 	"log"
 	"math/rand"
-	"officetime-api/internal/db"
-	"officetime-api/internal/model/user/app/command_query"
-	"officetime-api/internal/model/user/domain/user"
 	"strings"
 	"time"
 )
@@ -26,7 +25,7 @@ func NewPgUserRepository(db *sql.DB) *PgUserRepository {
 	return &PgUserRepository{db: db}
 }
 
-func (prr PgUserRepository) CreateUser(_ context.Context, u *user.User) (*command_query.User, error) {
+func (prr PgUserRepository) CreateUser(_ context.Context, u *user.User) (*user.User, error) {
 	moscowLocation, _ := time.LoadLocation("Europe/Moscow")
 	now := time.Now().In(moscowLocation)
 	password := randomString(10)
@@ -50,21 +49,18 @@ func (prr PgUserRepository) CreateUser(_ context.Context, u *user.User) (*comman
 		}
 	}
 
-	return &command_query.User{
-		Password: password,
-		User: &user.User{
-			Id:         lastInsertId,
-			Name:       u.Name,
-			Surname:    u.Surname,
-			Lastname:   u.Lastname,
-			BirthDate:  u.BirthDate,
-			Email:      u.Email,
-			MacAddress: u.MacAddress,
-			TelegramId: u.TelegramId,
-			Role:       u.Role,
-			Department: u.Department,
-			Position:   u.Position,
-		},
+	return &user.User{
+		Id:         lastInsertId,
+		Name:       u.Name,
+		Surname:    u.Surname,
+		Lastname:   u.Lastname,
+		BirthDate:  u.BirthDate,
+		Email:      u.Email,
+		MacAddress: u.MacAddress,
+		TelegramId: u.TelegramId,
+		Role:       u.Role,
+		Department: u.Department,
+		Position:   u.Position,
 	}, nil
 }
 

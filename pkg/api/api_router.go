@@ -3,10 +3,10 @@ package api
 import (
 	"context"
 	"errors"
-	"officetime-api/internal/model/router/app/command"
-	"officetime-api/internal/model/router/app/command_query"
-	"officetime-api/internal/model/router/app/query"
-	"officetime-api/internal/model/router/domain/router"
+	"github.com/robertobadjio/tgtime-api/internal/model/router/app/command"
+	"github.com/robertobadjio/tgtime-api/internal/model/router/app/command_query"
+	"github.com/robertobadjio/tgtime-api/internal/model/router/app/query"
+	"github.com/robertobadjio/tgtime-api/internal/model/router/domain/router"
 )
 
 func (s *apiService) GetRouters(ctx context.Context) ([]*router.Router, error) {

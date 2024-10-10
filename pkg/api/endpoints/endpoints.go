@@ -3,7 +3,7 @@ package endpoints
 import (
 	"context"
 	"github.com/go-kit/kit/endpoint"
-	"officetime-api/pkg/api"
+	"github.com/robertobadjio/tgtime-api/pkg/api"
 )
 
 type Set struct {
@@ -17,11 +17,12 @@ type Set struct {
 	UpdateRouterEndpoint endpoint.Endpoint
 	DeleteRouterEndpoint endpoint.Endpoint
 
-	GetPeriodEndpoint    endpoint.Endpoint
-	GetPeriodsEndpoint   endpoint.Endpoint
-	CreatePeriodEndpoint endpoint.Endpoint
-	UpdatePeriodEndpoint endpoint.Endpoint
-	DeletePeriodEndpoint endpoint.Endpoint
+	GetPeriodEndpoint        endpoint.Endpoint
+	GetPeriodCurrentEndpoint endpoint.Endpoint
+	GetPeriodsEndpoint       endpoint.Endpoint
+	CreatePeriodEndpoint     endpoint.Endpoint
+	UpdatePeriodEndpoint     endpoint.Endpoint
+	DeletePeriodEndpoint     endpoint.Endpoint
 
 	GetDepartmentEndpoint    endpoint.Endpoint
 	GetDepartmentsEndpoint   endpoint.Endpoint
@@ -41,7 +42,7 @@ type Set struct {
 
 func NewEndpointSet(svc api.Service) Set {
 	return Set{
-		LoginEndpoint: MakeLoginEndpoint(svc),
+		//LoginEndpoint: MakeLoginEndpoint(svc),
 
 		ServiceStatusEndpoint: MakeServiceStatusEndpoint(svc),
 
@@ -51,11 +52,12 @@ func NewEndpointSet(svc api.Service) Set {
 		UpdateRouterEndpoint: MakeUpdateRouterEndpoint(svc),
 		DeleteRouterEndpoint: MakeDeleteRouterEndpoint(svc),
 
-		GetPeriodEndpoint:    MakeGetPeriodEndpoint(svc),
-		GetPeriodsEndpoint:   MakeGetPeriodsEndpoint(svc),
-		CreatePeriodEndpoint: MakeCreatePeriodEndpoint(svc),
-		UpdatePeriodEndpoint: MakeUpdatePeriodEndpoint(svc),
-		DeletePeriodEndpoint: MakeDeletePeriodEndpoint(svc),
+		GetPeriodEndpoint:        MakeGetPeriodEndpoint(svc),
+		GetPeriodCurrentEndpoint: MakeGetPeriodCurrentEndpoint(svc),
+		GetPeriodsEndpoint:       MakeGetPeriodsEndpoint(svc),
+		CreatePeriodEndpoint:     MakeCreatePeriodEndpoint(svc),
+		UpdatePeriodEndpoint:     MakeUpdatePeriodEndpoint(svc),
+		DeletePeriodEndpoint:     MakeDeletePeriodEndpoint(svc),
 
 		GetDepartmentEndpoint:    MakeGetDepartmentEndpoint(svc),
 		GetDepartmentsEndpoint:   MakeGetDepartmentsEndpoint(svc),
@@ -74,7 +76,7 @@ func NewEndpointSet(svc api.Service) Set {
 	}
 }
 
-func MakeLoginEndpoint(svc api.Service) endpoint.Endpoint {
+/*func MakeLoginEndpoint(svc api.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(LoginRequest)
 		authData, err := svc.Login(ctx, req.Email, req.Password)
@@ -89,7 +91,7 @@ func MakeLoginEndpoint(svc api.Service) endpoint.Endpoint {
 			},
 			nil
 	}
-}
+}*/
 
 func MakeServiceStatusEndpoint(svc api.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
@@ -161,6 +163,17 @@ func MakeGetPeriodEndpoint(svc api.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(GetPeriodRequest)
 		period, err := svc.GetPeriod(ctx, req.PeriodId)
+		if err != nil {
+			return GetPeriodResponse{}, err
+		}
+		return GetPeriodResponse{Period: period}, nil
+	}
+}
+
+func MakeGetPeriodCurrentEndpoint(svc api.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		_ = request.(GetPeriodCurrentRequest)
+		period, err := svc.GetPeriodCurrent(ctx)
 		if err != nil {
 			return GetPeriodResponse{}, err
 		}

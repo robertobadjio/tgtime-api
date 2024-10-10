@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
+	"github.com/robertobadjio/tgtime-api/pkg/api/endpoints"
 	"net/http"
-	"officetime-api/pkg/api/endpoints"
 	"strconv"
 )
 

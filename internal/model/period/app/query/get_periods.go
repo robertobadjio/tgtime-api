@@ -2,8 +2,9 @@ package query
 
 import (
 	"context"
-	"officetime-api/internal/common/decorator"
-	"officetime-api/internal/model/period/domain/period"
+	"github.com/robertobadjio/tgtime-api/internal/common/decorator"
+	"github.com/robertobadjio/tgtime-api/internal/model/period/domain/period"
+	"time"
 )
 
 type GetPeriods struct {
@@ -22,5 +23,23 @@ func NewGetPeriodsHandler(r period.Repository) GetPeriodsHandler {
 }
 
 func (h getPeriodsHandler) Handle(ctx context.Context, _ GetPeriods) ([]*period.Period, error) {
-	return h.periodRepository.GetPeriods(ctx)
+	ps, err := h.periodRepository.GetPeriods(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	for i, p := range ps {
+		start, err := time.Parse(time.RFC3339, p.BeginDate)
+		if err != nil {
+			return nil, err
+		}
+
+		end, err := time.Parse(time.RFC3339, p.EndDate)
+		if err != nil {
+			panic(err)
+		}
+		ps[i].WorkingDays = getWorkHoursBetween(start, end)
+	}
+
+	return ps, nil
 }

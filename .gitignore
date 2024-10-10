@@ -1,7 +1,2 @@
 .idea
 .env
-
-config/config.yaml
-
-build/officetime
-deploy/deploy.config

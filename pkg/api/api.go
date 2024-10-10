@@ -3,18 +3,20 @@ package api
 import (
 	"context"
 	"fmt"
+	"github.com/robertobadjio/tgtime-api/internal/model/user/domain/user"
+
+	//"github.com/robertobadjio/tgtime-api/app/service"
+	//"github.com/robertobadjio/tgtime-api/internal/config"
+	//"github.com/robertobadjio/tgtime-api/internal/db"
+	departmentApp "github.com/robertobadjio/tgtime-api/internal/model/department/app"
+	periodApp "github.com/robertobadjio/tgtime-api/internal/model/period/app"
+	routerApp "github.com/robertobadjio/tgtime-api/internal/model/router/app"
+	//"github.com/robertobadjio/tgtime-api/internal/model/user/adapter"
+	userApp "github.com/robertobadjio/tgtime-api/internal/model/user/app"
+	//"github.com/robertobadjio/tgtime-api/internal/model/user/app/query"
+	weekendApp "github.com/robertobadjio/tgtime-api/internal/model/weekend/app"
 	"net/http"
-	"officetime-api/app/service"
-	"officetime-api/internal/config"
-	"officetime-api/internal/db"
-	departmentApp "officetime-api/internal/model/department/app"
-	periodApp "officetime-api/internal/model/period/app"
-	routerApp "officetime-api/internal/model/router/app"
-	"officetime-api/internal/model/user/adapter"
-	userApp "officetime-api/internal/model/user/app"
-	"officetime-api/internal/model/user/app/query"
-	weekendApp "officetime-api/internal/model/weekend/app"
-	"time"
+	//"time"
 )
 
 type apiService struct {
@@ -23,6 +25,11 @@ type apiService struct {
 	departmentApp departmentApp.Application
 	weekendApp    weekendApp.Application
 	userApp       userApp.Application
+}
+
+func (s *apiService) GetUserByMacAddress(ctx context.Context, macAddress string) (*user.User, error) {
+	//TODO implement me
+	panic("implement me")
 }
 
 func NewService(
@@ -41,6 +48,7 @@ func NewService(
 	}
 }
 
+/*
 func (s *apiService) Login(_ context.Context, email, password string) (*service.TokenDetails, error) {
 	cfg := config.New()
 
@@ -75,7 +83,7 @@ func buildUserApp() userApp.Application {
 			GetUserPasswordHashByEmail: query.NewGetUserPasswordHashByEmailHandler(userRepository),
 		},
 	}
-}
+}*/
 
 func (s *apiService) ServiceStatus(_ context.Context) (int, error) {
 	fmt.Println("Checking the Service health...")

@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
+	"github.com/robertobadjio/tgtime-api/pkg/api/endpoints"
 	"net/http"
-	"officetime-api/pkg/api/endpoints"
 	"strconv"
 )
 
@@ -33,6 +33,12 @@ func decodeHTTPGetPeriodRequest(_ context.Context, r *http.Request) (interface{}
 	}
 
 	req.PeriodId = periodId
+
+	return req, nil
+}
+
+func decodeHTTPGetPeriodCurrentRequest(_ context.Context, _ *http.Request) (interface{}, error) {
+	var req endpoints.GetPeriodCurrentRequest
 
 	return req, nil
 }

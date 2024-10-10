@@ -2,8 +2,8 @@ package query
 
 import (
 	"context"
-	"officetime-api/internal/common/decorator"
-	"officetime-api/internal/model/department/domain/department"
+	"github.com/robertobadjio/tgtime-api/internal/common/decorator"
+	"github.com/robertobadjio/tgtime-api/internal/model/department/domain/department"
 )
 
 type GetDepartment struct {

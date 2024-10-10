@@ -1,6 +1,6 @@
 package app
 
-import "officetime-api/internal/model/weekend/app/query"
+import "github.com/robertobadjio/tgtime-api/internal/model/weekend/app/query"
 
 type Application struct {
 	Queries Queries

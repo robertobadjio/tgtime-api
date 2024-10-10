@@ -1,10 +1,10 @@
 package endpoints
 
 import (
-	"officetime-api/internal/model/department/domain/department"
-	"officetime-api/internal/model/period/domain/period"
-	"officetime-api/internal/model/router/domain/router"
-	"officetime-api/internal/model/user/domain/user"
+	"github.com/robertobadjio/tgtime-api/internal/model/department/domain/department"
+	"github.com/robertobadjio/tgtime-api/internal/model/period/domain/period"
+	"github.com/robertobadjio/tgtime-api/internal/model/router/domain/router"
+	"github.com/robertobadjio/tgtime-api/internal/model/user/domain/user"
 )
 
 type LoginRequest struct {
@@ -60,6 +60,8 @@ type GetPeriodsRequest struct{}
 type GetPeriodsResponse struct {
 	Periods []*period.Period `json:"periods"`
 }
+
+type GetPeriodCurrentRequest struct{}
 
 type GetPeriodRequest struct {
 	PeriodId int `json:"period_id"`

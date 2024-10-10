@@ -1,11 +1,12 @@
 package service
 
+/*
 import (
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
+	"github.com/robertobadjio/tgtime-api/internal/config"
+	"github.com/robertobadjio/tgtime-api/internal/model/user/domain/user"
 	"net/http"
-	"officetime-api/internal/config"
-	"officetime-api/internal/model/user/domain/user"
 	"strconv"
 	"strings"
 	"time"
@@ -122,3 +123,4 @@ func ExtractTokenMetadata(r *http.Request) (*AccessDetails, error) {
 	}
 	return nil, err
 }
+*/

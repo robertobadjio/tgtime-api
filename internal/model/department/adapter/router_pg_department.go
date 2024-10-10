@@ -5,9 +5,9 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/robertobadjio/tgtime-api/internal/db"
+	"github.com/robertobadjio/tgtime-api/internal/model/department/domain/department"
 	"log"
-	"officetime-api/internal/db"
-	"officetime-api/internal/model/department/domain/department"
 	"strings"
 	"time"
 )

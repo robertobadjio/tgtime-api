@@ -2,8 +2,8 @@ package query
 
 import (
 	"context"
-	"officetime-api/internal/common/decorator"
-	"officetime-api/internal/model/weekend/domain/weekend"
+	"github.com/robertobadjio/tgtime-api/internal/common/decorator"
+	"github.com/robertobadjio/tgtime-api/internal/model/weekend/domain/weekend"
 	"time"
 )
 

@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   app:
     depends_on:
@@ -9,19 +7,20 @@ services:
       - db
 
   db:
-    image: postgres:16.2
-    container_name: officetime-api-db
+    image: postgres:17.0
+    container_name: tgtime-api-db
     restart: always
     ports:
       - "${DATABASE_PORT:-5432}:5432"
     volumes:
       - data:/var/lib/postgresql/data
+      - ./init.sql:/docker/db/docker-entrypoint-initdb.d/init.sql
     environment:
       POSTGRES_DB: ${DATABASE_NAME}
       POSTGRES_USER: ${DATABASE_USER}
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
     networks:
-      officetime-api-network:
+      tgtime-api-network:
         aliases:
           - database
     healthcheck:
@@ -33,10 +32,10 @@ services:
   migrate:
     image: migrate/migrate
     networks:
-      - officetime-api-network
+      - tgtime-api-network
     volumes:
       - ./db/migrations:/migrations
-    command: ["-path", "/migrations", "-database", "postgres://${DATABASE_USER}:${DATABASE_PASSWORD}@database:${DATABASE_PORT}/${DATABASE_NAME}?sslmode=${DATABASE_SSL_MODE}", "up"]
+    command: ["-path", "/migrations", "-database", "postgres://${DATABASE_USER}:${DATABASE_PASSWORD}@db:${DATABASE_PORT}/${DATABASE_NAME}?sslmode=${DATABASE_SSL_MODE}", "up"]
     links:
       - db
 

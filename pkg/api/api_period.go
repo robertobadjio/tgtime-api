@@ -3,15 +3,25 @@ package api
 import (
 	"context"
 	"errors"
-	"officetime-api/internal/model/period/app/command"
-	"officetime-api/internal/model/period/app/command_query"
-	"officetime-api/internal/model/period/app/query"
-	"officetime-api/internal/model/period/domain/period"
+	"github.com/robertobadjio/tgtime-api/internal/model/period/app/command"
+	"github.com/robertobadjio/tgtime-api/internal/model/period/app/command_query"
+	"github.com/robertobadjio/tgtime-api/internal/model/period/app/query"
+	"github.com/robertobadjio/tgtime-api/internal/model/period/domain/period"
 )
 
 func (s *apiService) GetPeriod(ctx context.Context, periodId int) (*period.Period, error) {
 	qr := query.GetPeriod{PeriodId: periodId}
 	p, err := s.periodApp.Queries.GetPeriod.Handle(ctx, qr)
+	if err != nil {
+		return nil, err
+	}
+
+	return p, nil
+}
+
+func (s *apiService) GetPeriodCurrent(ctx context.Context) (*period.Period, error) {
+	qr := query.GetPeriodCurrent{}
+	p, err := s.periodApp.Queries.GetPeriodCurrent.Handle(ctx, qr)
 	if err != nil {
 		return nil, err
 	}

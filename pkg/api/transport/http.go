@@ -6,9 +6,9 @@ import (
 	"errors"
 	httptransport "github.com/go-kit/kit/transport/http"
 	"github.com/gorilla/mux"
+	util "github.com/robertobadjio/tgtime-api/internal/util"
+	"github.com/robertobadjio/tgtime-api/pkg/api/endpoints"
 	"net/http"
-	util "officetime-api/internal/util"
-	"officetime-api/pkg/api/endpoints"
 )
 
 //var logger log.Logger
@@ -129,6 +129,16 @@ func NewHTTPHandler(ep endpoints.Set) http.Handler {
 				opts...,
 			),
 		)
+	api1.Methods(http.MethodGet).
+		Path("/period/current").
+		Handler(
+			httptransport.NewServer(
+				ep.GetPeriodCurrentEndpoint,
+				decodeHTTPGetPeriodCurrentRequest,
+				encodeResponse,
+				opts...,
+			),
+		)
 	api1.Methods(http.MethodPost).
 		Path("/period").
 		Handler(
@@ -206,6 +216,17 @@ func NewHTTPHandler(ep endpoints.Set) http.Handler {
 			httptransport.NewServer(
 				ep.DeleteDepartmentEndpoint,
 				decodeHTTPDeleteDepartmentRequest,
+				encodeResponse,
+				opts...,
+			),
+		)
+
+	api1.Methods(http.MethodGet).
+		Path("/user").
+		Handler(
+			httptransport.NewServer(
+				ep.GetUsersEndpoint,
+				decodeHTTPGetUsersRequest,
 				encodeResponse,
 				opts...,
 			),

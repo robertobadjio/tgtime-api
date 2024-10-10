@@ -2,11 +2,11 @@ package api
 
 import (
 	"context"
-	"officetime-api/app/service"
-	"officetime-api/internal/model/user/app/command"
-	"officetime-api/internal/model/user/app/command_query"
-	"officetime-api/internal/model/user/app/query"
-	"officetime-api/internal/model/user/domain/user"
+	"github.com/robertobadjio/tgtime-api/app/service"
+	"github.com/robertobadjio/tgtime-api/internal/model/user/app/command"
+	"github.com/robertobadjio/tgtime-api/internal/model/user/app/command_query"
+	"github.com/robertobadjio/tgtime-api/internal/model/user/app/query"
+	"github.com/robertobadjio/tgtime-api/internal/model/user/domain/user"
 )
 
 func (s *apiService) CreateUser(ctx context.Context, u *user.User) (*user.User, error) {

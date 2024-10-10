@@ -2,8 +2,8 @@ package command_query
 
 import (
 	"context"
-	"officetime-api/internal/common/decorator"
-	"officetime-api/internal/model/user/domain/user"
+	"github.com/robertobadjio/tgtime-api/internal/common/decorator"
+	"github.com/robertobadjio/tgtime-api/internal/model/user/domain/user"
 )
 
 type CreateUser struct {
@@ -27,10 +27,10 @@ func NewCreateUserHandler(userRepository user.Repository) CreateUserHandler {
 }
 
 func (h createUserHandler) Handle(ctx context.Context, cmdQr CreateUser) (User, error) {
-	password, userNew, err := h.userRepository.CreateUser(ctx, cmdQr.User)
+	userNew, err := h.userRepository.CreateUser(ctx, cmdQr.User)
 	if err != nil {
 		return User{Password: "", User: nil}, err
 	}
 
-	return User{Password: password, User: userNew}, nil
+	return User{Password: "", User: userNew}, nil // TODO: Empty password
 }

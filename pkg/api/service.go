@@ -2,15 +2,14 @@ package api
 
 import (
 	"context"
-	"officetime-api/app/service"
-	"officetime-api/internal/model/department/domain/department"
-	"officetime-api/internal/model/period/domain/period"
-	"officetime-api/internal/model/router/domain/router"
-	"officetime-api/internal/model/user/domain/user"
+	"github.com/robertobadjio/tgtime-api/internal/model/department/domain/department"
+	"github.com/robertobadjio/tgtime-api/internal/model/period/domain/period"
+	"github.com/robertobadjio/tgtime-api/internal/model/router/domain/router"
+	"github.com/robertobadjio/tgtime-api/internal/model/user/domain/user"
 )
 
 type Service interface {
-	Login(ctx context.Context, email, password string) (*service.TokenDetails, error)
+	//Login(ctx context.Context, email, password string) (*service.TokenDetails, error)
 	//TokenRefresh(ctx context.Context, ticketID string) (internal.Status, error)
 	//Logout(ctx context.Context, ticketID, mark string) (int, error)
 
@@ -23,6 +22,7 @@ type Service interface {
 	DeleteRouter(ctx context.Context, routerId int) error
 
 	GetPeriod(ctx context.Context, periodId int) (*period.Period, error)
+	GetPeriodCurrent(ctx context.Context) (*period.Period, error)
 	GetPeriods(ctx context.Context) ([]*period.Period, error)
 	CreatePeriod(ctx context.Context, period *period.Period) (*period.Period, error)
 	UpdatePeriod(ctx context.Context, periodId int, period *period.Period) (*period.Period, error)
@@ -50,6 +50,5 @@ type Service interface {
 	GetStatByPeriodsAndRouters(ctx context.Context) (int, error)
 	GetAllTimesDepartmentsByDate(ctx context.Context) (int, error)
 	GetStatWorkingPeriod(ctx context.Context) (int, error)
-
 	*/
 }

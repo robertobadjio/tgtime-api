@@ -2,7 +2,7 @@ package api
 
 import (
 	"context"
-	"officetime-api/internal/model/weekend/app/query"
+	"github.com/robertobadjio/tgtime-api/internal/model/weekend/app/query"
 )
 
 func (s *apiService) GetWeekends(ctx context.Context) ([]string, error) {

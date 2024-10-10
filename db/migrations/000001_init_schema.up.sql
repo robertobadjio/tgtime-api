@@ -49,7 +49,7 @@ create table users
 insert into public.users (id, name, email, mac_address, telegram_id, email_verified_at, password, remember_token, device_mac_address, created_at, updated_at, deleted, department_id, role, surname, lastname, birth_date, position)
 values  (57, 'Иван', 'test1@gmail.com', 'd0:2b:20:eb:3d:9d', '1466023675', null, '$2a$14$9jltXblz65ai/j9PTxJBC.s8ubTsYciXp7GiAQl0aOP.NZXhbeVY.', null, null, '2021-04-04 19:07:24', null, false, 1, '', 'Иван', 'Иван', '2021-04-16', ''),
         (4, 'Тимофей', 'test2@mail.ru', 'bc:e1:43:49:fe:cc', '284632731', null, 'drsdf', null, null, null, null, false, 0, 'Employee', '', '', '2021-04-16', ''),
-        (1, 'Анастасия', 'test3@officetime.tech', '7c:a1:ae:a9:c0:d8', '343536263', null, '$2y$10$dxogytXGfNkv.9Bg4veOsu/Bksb/11hbNtQPSh6068pxq4UoVVgdC', '2EBv5lByUt7wsIibjCxKNmm7niDOvIUykoijBuKoSSNpNeqSrFc1vYcknh6s', null, null, null, false, 1, 'Admin', 'Некрасова', 'Николаевна', '1990-09-30', 'Backend Developer');
+        (1, 'Анастасия', 'test3@tgtime.ru', '7c:a1:ae:a9:c0:d8', '343536263', null, '$2y$10$dxogytXGfNkv.9Bg4veOsu/Bksb/11hbNtQPSh6068pxq4UoVVgdC', '2EBv5lByUt7wsIibjCxKNmm7niDOvIUykoijBuKoSSNpNeqSrFc1vYcknh6s', null, null, null, false, 1, 'Admin', 'Некрасова', 'Николаевна', '1990-09-30', 'Backend Developer');
 
 DROP TABLE IF EXISTS router;
 
@@ -58,7 +58,6 @@ create table router
     id          serial
         constraint router_pk
             primary key,
-    uuid
     name        varchar(255) default ''::character varying not null,
     description varchar(255) default ''::character varying not null,
     address     varchar(20)  default ''::character varying not null,

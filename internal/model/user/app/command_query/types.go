@@ -1,7 +1,7 @@
 package command_query
 
 import (
-	"officetime-api/internal/model/user/domain/user"
+	"github.com/robertobadjio/tgtime-api/internal/model/user/domain/user"
 )
 
 type User struct {

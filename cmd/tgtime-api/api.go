@@ -2,50 +2,45 @@ package main
 
 import (
 	"fmt"
-	jwt "github.com/dgrijalva/jwt-go"
 	kitgrpc "github.com/go-kit/kit/transport/grpc"
+	pb "github.com/robertobadjio/tgtime-api/api/v1/pb/api"
+	"github.com/robertobadjio/tgtime-api/internal/config"
+	"github.com/robertobadjio/tgtime-api/internal/db"
+	departmentAdapter "github.com/robertobadjio/tgtime-api/internal/model/department/adapter"
+	departmentApp "github.com/robertobadjio/tgtime-api/internal/model/department/app"
+	departmentCommand "github.com/robertobadjio/tgtime-api/internal/model/department/app/command"
+	departmentCommandQuery "github.com/robertobadjio/tgtime-api/internal/model/department/app/command_query"
+	departmentQuery "github.com/robertobadjio/tgtime-api/internal/model/department/app/query"
+	periodAdapter "github.com/robertobadjio/tgtime-api/internal/model/period/adapter"
+	periodApp "github.com/robertobadjio/tgtime-api/internal/model/period/app"
+	periodCommand "github.com/robertobadjio/tgtime-api/internal/model/period/app/command"
+	periodCommandQuery "github.com/robertobadjio/tgtime-api/internal/model/period/app/command_query"
+	periodQuery "github.com/robertobadjio/tgtime-api/internal/model/period/app/query"
+	routerAdapter "github.com/robertobadjio/tgtime-api/internal/model/router/adapter"
+	routerApp "github.com/robertobadjio/tgtime-api/internal/model/router/app"
+	routerCommand "github.com/robertobadjio/tgtime-api/internal/model/router/app/command"
+	routerCommandQuery "github.com/robertobadjio/tgtime-api/internal/model/router/app/command_query"
+	routerQuery "github.com/robertobadjio/tgtime-api/internal/model/router/app/query"
+	userAdapter "github.com/robertobadjio/tgtime-api/internal/model/user/adapter"
+	userApp "github.com/robertobadjio/tgtime-api/internal/model/user/app"
+	userCommand "github.com/robertobadjio/tgtime-api/internal/model/user/app/command"
+	userCommandQuery "github.com/robertobadjio/tgtime-api/internal/model/user/app/command_query"
+	userQuery "github.com/robertobadjio/tgtime-api/internal/model/user/app/query"
+	weekendAdapter "github.com/robertobadjio/tgtime-api/internal/model/weekend/adapter"
+	weekendApp "github.com/robertobadjio/tgtime-api/internal/model/weekend/app"
+	weekendQuery "github.com/robertobadjio/tgtime-api/internal/model/weekend/app/query"
+	"github.com/robertobadjio/tgtime-api/pkg/api"
+	"github.com/robertobadjio/tgtime-api/pkg/api/endpoints"
+	"github.com/robertobadjio/tgtime-api/pkg/api/transport"
 	"google.golang.org/grpc"
 	"log"
 	"net"
-	pb "officetime-api/api/v1/pb/api"
-	"officetime-api/internal/config"
-	"officetime-api/internal/db"
-	departmentAdapter "officetime-api/internal/model/department/adapter"
-	departmentApp "officetime-api/internal/model/department/app"
-	departmentCommand "officetime-api/internal/model/department/app/command"
-	departmentCommandQuery "officetime-api/internal/model/department/app/command_query"
-	departmentQuery "officetime-api/internal/model/department/app/query"
-	periodAdapter "officetime-api/internal/model/period/adapter"
-	periodApp "officetime-api/internal/model/period/app"
-	periodCommand "officetime-api/internal/model/period/app/command"
-	periodCommandQuery "officetime-api/internal/model/period/app/command_query"
-	periodQuery "officetime-api/internal/model/period/app/query"
-	routerAdapter "officetime-api/internal/model/router/adapter"
-	routerApp "officetime-api/internal/model/router/app"
-	routerCommand "officetime-api/internal/model/router/app/command"
-	routerCommandQuery "officetime-api/internal/model/router/app/command_query"
-	routerQuery "officetime-api/internal/model/router/app/query"
-	userAdapter "officetime-api/internal/model/user/adapter"
-	userApp "officetime-api/internal/model/user/app"
-	userCommand "officetime-api/internal/model/user/app/command"
-	userCommandQuery "officetime-api/internal/model/user/app/command_query"
-	userQuery "officetime-api/internal/model/user/app/query"
-	weekendAdapter "officetime-api/internal/model/weekend/adapter"
-	weekendApp "officetime-api/internal/model/weekend/app"
-	weekendQuery "officetime-api/internal/model/weekend/app/query"
-	"officetime-api/pkg/api"
-	"officetime-api/pkg/api/endpoints"
-	"officetime-api/pkg/api/transport"
 	"os"
 	"os/signal"
 	"syscall"
 
-	//"github.com/go-kit/kit/log"
-	"github.com/gorilla/mux"
 	"github.com/oklog/oklog/pkg/group"
 	"net/http"
-	"officetime-api/app/service"
-	"strconv"
 )
 
 func main() {
@@ -92,8 +87,9 @@ func main() {
 			DeletePeriod: periodCommand.NewDeletePeriodHandler(periodRepository),
 		},
 		Queries: periodApp.Queries{
-			GetPeriod:  periodQuery.NewGetPeriodHandler(periodRepository),
-			GetPeriods: periodQuery.NewGetPeriodsHandler(periodRepository),
+			GetPeriod:        periodQuery.NewGetPeriodHandler(periodRepository),
+			GetPeriodCurrent: periodQuery.NewGetPeriodCurrentHandler(periodRepository),
+			GetPeriods:       periodQuery.NewGetPeriodsHandler(periodRepository),
 		},
 		CommandsQueries: periodApp.CommandsQueries{
 			CreatePeriod: periodCommandQuery.NewCreatePeriodHandler(periodRepository),
@@ -223,7 +219,7 @@ func commonMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func isAuthorized(endpoint func(http.ResponseWriter, *http.Request)) http.Handler {
+/*func isAuthorized(endpoint func(http.ResponseWriter, *http.Request)) http.Handler {
 	cfg := config.New()
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Header["Token"] != nil {
@@ -274,4 +270,4 @@ func isAuthorized(endpoint func(http.ResponseWriter, *http.Request)) http.Handle
 			fmt.Fprintf(w, "Not Authorized")
 		}
 	})
-}
+}*/

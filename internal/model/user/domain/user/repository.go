@@ -2,11 +2,10 @@ package user
 
 import (
 	"context"
-	"officetime-api/internal/model/user/app/command_query"
 )
 
 type Repository interface {
-	CreateUser(ctx context.Context, user *User) (*command_query.User, error)
+	CreateUser(ctx context.Context, user *User) (*User, error)
 	UpdateUser(ctx context.Context, user *User) (*User, error)
 	GetUser(ctx context.Context, userId int) (*User, error)
 	GetUserByEmail(ctx context.Context, email string) (*User, error)

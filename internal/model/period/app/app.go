@@ -1,9 +1,9 @@
 package app
 
 import (
-	"officetime-api/internal/model/period/app/command"
-	"officetime-api/internal/model/period/app/command_query"
-	"officetime-api/internal/model/period/app/query"
+	"github.com/robertobadjio/tgtime-api/internal/model/period/app/command"
+	"github.com/robertobadjio/tgtime-api/internal/model/period/app/command_query"
+	"github.com/robertobadjio/tgtime-api/internal/model/period/app/query"
 )
 
 type Application struct {
@@ -18,8 +18,9 @@ type Commands struct {
 }
 
 type Queries struct {
-	GetPeriod  query.GetPeriodHandler
-	GetPeriods query.GetPeriodsHandler
+	GetPeriod        query.GetPeriodHandler
+	GetPeriodCurrent query.GetPeriodCurrentHandler
+	GetPeriods       query.GetPeriodsHandler
 }
 
 type CommandsQueries struct {

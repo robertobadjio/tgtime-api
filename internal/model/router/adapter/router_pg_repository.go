@@ -6,8 +6,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/lib/pq"
-	"officetime-api/internal/db"
-	"officetime-api/internal/model/router/domain/router"
+	"github.com/robertobadjio/tgtime-api/internal/db"
+	"github.com/robertobadjio/tgtime-api/internal/model/router/domain/router"
 	"strings"
 	"time"
 )

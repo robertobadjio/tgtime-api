@@ -3,10 +3,10 @@ package api
 import (
 	"context"
 	"errors"
-	"officetime-api/internal/model/department/app/command"
-	"officetime-api/internal/model/department/app/command_query"
-	"officetime-api/internal/model/department/app/query"
-	"officetime-api/internal/model/department/domain/department"
+	"github.com/robertobadjio/tgtime-api/internal/model/department/app/command"
+	"github.com/robertobadjio/tgtime-api/internal/model/department/app/command_query"
+	"github.com/robertobadjio/tgtime-api/internal/model/department/app/query"
+	"github.com/robertobadjio/tgtime-api/internal/model/department/domain/department"
 )
 
 func (s *apiService) GetDepartments(ctx context.Context) ([]*department.Department, error) {
