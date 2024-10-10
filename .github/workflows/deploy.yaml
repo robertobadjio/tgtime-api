@@ -67,6 +67,37 @@ jobs:
             tags: ${{ steps.meta.outputs.tags }}
             labels: ${{ steps.meta.outputs.labels }}
 
+    migrate:
+      runs-on: ubuntu-latest
+      needs: build-and-push-image
+      environment: migrations
+      defaults:
+        run:
+          working-directory: .
+
+      steps:
+        - name: Checkout
+          uses: actions/checkout@v3
+
+        - name: copy migration files
+          uses: appleboy/scp-action@master
+          with:
+            host: ${{ secrets.HOST }}
+            username: ${{ secrets.USERNAME }}
+            key: ${{ secrets.KEY }}
+            port: ${{ secrets.PORT }}
+            source: "db/migrations/*"
+            target: "/opt/tgtime-api/"
+        - name: migrate
+          uses: appleboy/ssh-action@master
+          with:
+            host: ${{ secrets.HOST }}
+            username: ${{ secrets.USERNAME }}
+            key: ${{ secrets.KEY }}
+            port: ${{ secrets.PORT }}
+            script: |
+              migrate -source file:///opt/tgtime-api/db/migrations -database postgres://tgtime_api_user:tgtime_api_password@localhost:5432/tgtime_api?sslmode=disable up
+
     deploy:
       runs-on: self-hosted
       needs: build-and-push-image
