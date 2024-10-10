@@ -82,4 +82,4 @@ jobs:
         - name: Run container
           run: |
             cd /opt/tgtime-api
-            docker compose up --build --pull=always &
+            docker-compose up --build --pull=always &
