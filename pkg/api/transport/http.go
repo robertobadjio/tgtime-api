@@ -232,6 +232,28 @@ func NewHTTPHandler(ep endpoints.Set) http.Handler {
 			),
 		)
 
+	api1.Methods(http.MethodGet).
+		Path("/user/{userId}").
+		Handler(
+			httptransport.NewServer(
+				ep.GetUserEndpoint,
+				decodeHTTPGetUserRequest,
+				encodeResponse,
+				opts...,
+			),
+		)
+
+	api1.Methods(http.MethodGet).
+		Path("/user-by-mac-address/{macAddress}").
+		Handler(
+			httptransport.NewServer(
+				ep.GetUserByMacAddressEndpoint,
+				decodeHTTPGetUserByMacAddressRequest,
+				encodeResponse,
+				opts...,
+			),
+		)
+
 	return router
 }
 

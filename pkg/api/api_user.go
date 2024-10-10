@@ -42,6 +42,16 @@ func (s *apiService) GetUser(ctx context.Context, userId int) (*user.User, error
 	return u, nil
 }
 
+func (s *apiService) GetUserByMacAddress(ctx context.Context, macAddress string) (*user.User, error) {
+	qr := query.GetUserByMacAddress{MacAddress: macAddress}
+	u, err := s.userApp.Queries.GetUserByMacAddress.Handle(ctx, qr)
+	if err != nil {
+		return nil, err
+	}
+
+	return u, nil
+}
+
 func (s *apiService) UpdateUser(ctx context.Context, u *user.User) (*user.User, error) {
 	cmd := command.UpdateUser{User: u}
 	err := s.userApp.Commands.UpdateUser.Handle(ctx, cmd)

@@ -3,8 +3,6 @@ package api
 import (
 	"context"
 	"fmt"
-	"github.com/robertobadjio/tgtime-api/internal/model/user/domain/user"
-
 	//"github.com/robertobadjio/tgtime-api/app/service"
 	//"github.com/robertobadjio/tgtime-api/internal/config"
 	//"github.com/robertobadjio/tgtime-api/internal/db"
@@ -25,11 +23,6 @@ type apiService struct {
 	departmentApp departmentApp.Application
 	weekendApp    weekendApp.Application
 	userApp       userApp.Application
-}
-
-func (s *apiService) GetUserByMacAddress(ctx context.Context, macAddress string) (*user.User, error) {
-	//TODO implement me
-	panic("implement me")
 }
 
 func NewService(
