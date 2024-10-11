@@ -6,7 +6,8 @@ option go_package = "./api";
 
 service Api {
   rpc GetRouters (GetRoutersRequest) returns (GetRoutersResponse) {}
-  rpc GetUserByAddress (GetUserByMacAddressRequest) returns (GetUserByMacAddressResponse) {}
+  rpc GetUserByMacAddress (GetUserByMacAddressRequest) returns (GetUserByMacAddressResponse) {}
+  rpc GetUserByTelegramId (GetUserByTelegramIdRequest) returns (GetUserByTelegramIdResponse) {}
 }
 
 message Router {
@@ -45,5 +46,13 @@ message GetUserByMacAddressRequest {
 }
 
 message GetUserByMacAddressResponse {
+  User user = 1;
+}
+
+message GetUserByTelegramIdRequest {
+  int64 telegramId = 1;
+}
+
+message GetUserByTelegramIdResponse {
   User user = 1;
 }

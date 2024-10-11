@@ -21,6 +21,7 @@ type Queries struct {
 	GetUser                    query.GetUserHandler
 	GetUserByEmail             query.GetUserByEmailHandler
 	GetUserByMacAddress        query.GetUserByMacAddressHandler
+	GetUserByTelegramId        query.GetUserByTelegramIdHandler
 	GetUsers                   query.GetUsersHandler
 	GetUsersByDepartment       query.GetUsersByDepartmentHandler
 	GetUserPasswordHashByEmail query.GetUserPasswordHashByEmailHandler

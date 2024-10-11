@@ -19,8 +19,9 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Api_GetRouters_FullMethodName       = "/pb.Api/GetRouters"
-	Api_GetUserByAddress_FullMethodName = "/pb.Api/GetUserByAddress"
+	Api_GetRouters_FullMethodName          = "/pb.Api/GetRouters"
+	Api_GetUserByMacAddress_FullMethodName = "/pb.Api/GetUserByMacAddress"
+	Api_GetUserByTelegramId_FullMethodName = "/pb.Api/GetUserByTelegramId"
 )
 
 // ApiClient is the client API for Api service.
@@ -28,7 +29,8 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ApiClient interface {
 	GetRouters(ctx context.Context, in *GetRoutersRequest, opts ...grpc.CallOption) (*GetRoutersResponse, error)
-	GetUserByAddress(ctx context.Context, in *GetUserByMacAddressRequest, opts ...grpc.CallOption) (*GetUserByMacAddressResponse, error)
+	GetUserByMacAddress(ctx context.Context, in *GetUserByMacAddressRequest, opts ...grpc.CallOption) (*GetUserByMacAddressResponse, error)
+	GetUserByTelegramId(ctx context.Context, in *GetUserByTelegramIdRequest, opts ...grpc.CallOption) (*GetUserByTelegramIdResponse, error)
 }
 
 type apiClient struct {
@@ -48,9 +50,18 @@ func (c *apiClient) GetRouters(ctx context.Context, in *GetRoutersRequest, opts 
 	return out, nil
 }
 
-func (c *apiClient) GetUserByAddress(ctx context.Context, in *GetUserByMacAddressRequest, opts ...grpc.CallOption) (*GetUserByMacAddressResponse, error) {
+func (c *apiClient) GetUserByMacAddress(ctx context.Context, in *GetUserByMacAddressRequest, opts ...grpc.CallOption) (*GetUserByMacAddressResponse, error) {
 	out := new(GetUserByMacAddressResponse)
-	err := c.cc.Invoke(ctx, Api_GetUserByAddress_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, Api_GetUserByMacAddress_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *apiClient) GetUserByTelegramId(ctx context.Context, in *GetUserByTelegramIdRequest, opts ...grpc.CallOption) (*GetUserByTelegramIdResponse, error) {
+	out := new(GetUserByTelegramIdResponse)
+	err := c.cc.Invoke(ctx, Api_GetUserByTelegramId_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +73,8 @@ func (c *apiClient) GetUserByAddress(ctx context.Context, in *GetUserByMacAddres
 // for forward compatibility
 type ApiServer interface {
 	GetRouters(context.Context, *GetRoutersRequest) (*GetRoutersResponse, error)
-	GetUserByAddress(context.Context, *GetUserByMacAddressRequest) (*GetUserByMacAddressResponse, error)
+	GetUserByMacAddress(context.Context, *GetUserByMacAddressRequest) (*GetUserByMacAddressResponse, error)
+	GetUserByTelegramId(context.Context, *GetUserByTelegramIdRequest) (*GetUserByTelegramIdResponse, error)
 	mustEmbedUnimplementedApiServer()
 }
 
@@ -73,8 +85,11 @@ type UnimplementedApiServer struct {
 func (UnimplementedApiServer) GetRouters(context.Context, *GetRoutersRequest) (*GetRoutersResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetRouters not implemented")
 }
-func (UnimplementedApiServer) GetUserByAddress(context.Context, *GetUserByMacAddressRequest) (*GetUserByMacAddressResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetUserByAddress not implemented")
+func (UnimplementedApiServer) GetUserByMacAddress(context.Context, *GetUserByMacAddressRequest) (*GetUserByMacAddressResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUserByMacAddress not implemented")
+}
+func (UnimplementedApiServer) GetUserByTelegramId(context.Context, *GetUserByTelegramIdRequest) (*GetUserByTelegramIdResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUserByTelegramId not implemented")
 }
 func (UnimplementedApiServer) mustEmbedUnimplementedApiServer() {}
 
@@ -107,20 +122,38 @@ func _Api_GetRouters_Handler(srv interface{}, ctx context.Context, dec func(inte
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Api_GetUserByAddress_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Api_GetUserByMacAddress_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetUserByMacAddressRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ApiServer).GetUserByAddress(ctx, in)
+		return srv.(ApiServer).GetUserByMacAddress(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Api_GetUserByAddress_FullMethodName,
+		FullMethod: Api_GetUserByMacAddress_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ApiServer).GetUserByAddress(ctx, req.(*GetUserByMacAddressRequest))
+		return srv.(ApiServer).GetUserByMacAddress(ctx, req.(*GetUserByMacAddressRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Api_GetUserByTelegramId_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetUserByTelegramIdRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ApiServer).GetUserByTelegramId(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Api_GetUserByTelegramId_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ApiServer).GetUserByTelegramId(ctx, req.(*GetUserByTelegramIdRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -137,8 +170,12 @@ var Api_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Api_GetRouters_Handler,
 		},
 		{
-			MethodName: "GetUserByAddress",
-			Handler:    _Api_GetUserByAddress_Handler,
+			MethodName: "GetUserByMacAddress",
+			Handler:    _Api_GetUserByMacAddress_Handler,
+		},
+		{
+			MethodName: "GetUserByTelegramId",
+			Handler:    _Api_GetUserByTelegramId_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

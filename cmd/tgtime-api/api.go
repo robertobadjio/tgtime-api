@@ -129,6 +129,7 @@ func main() {
 			GetUsers:                   userQuery.NewGetUsersHandler(userRepository),
 			GetUserByEmail:             userQuery.NewGetUserByEmailHandler(userRepository),
 			GetUserByMacAddress:        userQuery.NewGetUserByMacAddressHandler(userRepository),
+			GetUserByTelegramId:        userQuery.NewGetUserByTelegramIdHandler(userRepository),
 			GetUsersByDepartment:       userQuery.NewGetUsersByDepartmentHandler(userRepository),
 			GetUserPasswordHashByEmail: userQuery.NewGetUserPasswordHashByEmailHandler(userRepository),
 		},

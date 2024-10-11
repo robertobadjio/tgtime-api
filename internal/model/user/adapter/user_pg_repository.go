@@ -148,15 +148,31 @@ func (prr PgUserRepository) GetUserByEmail(_ context.Context, email string) (*us
 	return u, nil
 }
 
-func (prr PgUserRepository) GetUserByMacAddress(_ context.Context, macAddress string) (*user.User, error) {
+func (prr PgUserRepository) GetUserByMacAddress(ctx context.Context, macAddress string) (*user.User, error) {
 	u := new(user.User)
-	row := prr.db.QueryRow(
+	row := prr.db.QueryRowContext(
+		ctx,
 		"SELECT u.id, u.name, u.email, u.mac_address, u.telegram_id, u.role, u.surname, u.lastname, u.birth_date, u.position FROM users u WHERE u.mac_address = $1",
 		macAddress,
 	)
 	err := row.Scan(&u.Id, &u.Name, &u.Email, &u.MacAddress, &u.TelegramId, &u.Role, &u.Surname, &u.Lastname, &u.BirthDate, &u.Position)
 	if err != nil {
 		return nil, &user.NotFoundUserByMacAddress{MacAddress: macAddress}
+	}
+
+	return u, nil
+}
+
+func (prr PgUserRepository) GetUserByTelegramId(ctx context.Context, telegramId int64) (*user.User, error) {
+	u := new(user.User)
+	row := prr.db.QueryRowContext(
+		ctx,
+		"SELECT id, name, email, mac_address, telegram_id, role, surname, lastname, birth_date, position FROM users WHERE telegram_id = $1",
+		telegramId,
+	)
+	err := row.Scan(&u.Id, &u.Name, &u.Email, &u.MacAddress, &u.TelegramId, &u.Role, &u.Surname, &u.Lastname, &u.BirthDate, &u.Position)
+	if err != nil {
+		return nil, &user.NotFoundUserByTelegramId{TelegramId: telegramId}
 	}
 
 	return u, nil

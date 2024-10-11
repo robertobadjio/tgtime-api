@@ -10,6 +10,7 @@ type grpcServer struct {
 	getRouters              grpctransport.Handler
 	getUserByMacAddress     grpctransport.Handler
 	getGetTimesByTelegramId grpctransport.Handler
+	getUserByTelegramId     grpctransport.Handler
 	api.UnimplementedApiServer
 }
 
@@ -24,6 +25,11 @@ func NewGRPCServer(endpoints endpoints.Set) api.ApiServer {
 			endpoints.GetUserByMacAddressEndpoint,
 			decodeGRPCGetUserByMacAddressRequest,
 			encodeGRPCGetUserByMacAddressResponse,
+		),
+		getUserByTelegramId: grpctransport.NewServer(
+			endpoints.GetUserByTelegramIdEndpoint,
+			decodeGRPCGetUserByTelegramIdRequest,
+			encodeGRPCGetUserByTelegramIdResponse,
 		),
 	}
 }

@@ -39,6 +39,7 @@ type Service interface {
 	GetUsers(ctx context.Context, offset, limit int) ([]*user.User, error)
 	GetUser(ctx context.Context, userId int) (*user.User, error)
 	GetUserByMacAddress(ctx context.Context, macAddress string) (*user.User, error)
+	GetUserByTelegramId(ctx context.Context, telegramId int64) (*user.User, error)
 	UpdateUser(ctx context.Context, user *user.User) (*user.User, error)
 	CreateUser(ctx context.Context, user *user.User) (*user.User, error)
 	DeleteUser(ctx context.Context, userId int) error

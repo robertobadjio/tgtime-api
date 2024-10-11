@@ -52,6 +52,16 @@ func (s *apiService) GetUserByMacAddress(ctx context.Context, macAddress string)
 	return u, nil
 }
 
+func (s *apiService) GetUserByTelegramId(ctx context.Context, telegramId int64) (*user.User, error) {
+	qr := query.GetUserByTelegramId{TelegramId: telegramId}
+	u, err := s.userApp.Queries.GetUserByTelegramId.Handle(ctx, qr)
+	if err != nil {
+		return nil, err
+	}
+
+	return u, nil
+}
+
 func (s *apiService) UpdateUser(ctx context.Context, u *user.User) (*user.User, error) {
 	cmd := command.UpdateUser{User: u}
 	err := s.userApp.Commands.UpdateUser.Handle(ctx, cmd)

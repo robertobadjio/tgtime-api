@@ -148,6 +148,13 @@ type GetUserByMacAddressResponse struct {
 	User *user.User `json:"user"`
 }
 
+type GetUserByTelegramIdRequest struct {
+	TelegramId int64 `json:"telegram_id"`
+}
+type GetUserByTelegramIdResponse struct {
+	User *user.User `json:"user"`
+}
+
 type CreateUserRequest struct {
 	User *user.User `json:"user"`
 }

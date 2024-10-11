@@ -34,6 +34,7 @@ type Set struct {
 
 	GetUserEndpoint             endpoint.Endpoint
 	GetUserByMacAddressEndpoint endpoint.Endpoint
+	GetUserByTelegramIdEndpoint endpoint.Endpoint
 	GetUsersEndpoint            endpoint.Endpoint
 	CreateUserEndpoint          endpoint.Endpoint
 	UpdateUserEndpoint          endpoint.Endpoint
@@ -69,6 +70,7 @@ func NewEndpointSet(svc api.Service) Set {
 
 		GetUserEndpoint:             MakeGetUserEndpoint(svc),
 		GetUserByMacAddressEndpoint: MakeGetUserByMacAddressEndpoint(svc),
+		GetUserByTelegramIdEndpoint: MakeGetUserByTelegramIdEndpoint(svc),
 		GetUsersEndpoint:            MakeGetUsersEndpoint(svc),
 		CreateUserEndpoint:          MakeCreateUserEndpoint(svc),
 		UpdateUserEndpoint:          MakeUpdateUserEndpoint(svc),
@@ -310,6 +312,17 @@ func MakeGetUserByMacAddressEndpoint(svc api.Service) endpoint.Endpoint {
 			return GetUserByMacAddressResponse{}, err
 		}
 		return GetUserByMacAddressResponse{User: user}, nil
+	}
+}
+
+func MakeGetUserByTelegramIdEndpoint(svc api.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(GetUserByTelegramIdRequest)
+		user, err := svc.GetUserByTelegramId(ctx, req.TelegramId)
+		if err != nil {
+			return GetUserByTelegramIdResponse{}, err
+		}
+		return GetUserByTelegramIdResponse{User: user}, nil
 	}
 }
 

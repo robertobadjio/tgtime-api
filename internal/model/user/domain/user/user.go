@@ -44,6 +44,10 @@ type NotFoundUserByMacAddress struct {
 	MacAddress string
 }
 
+type NotFoundUserByTelegramId struct {
+	TelegramId int64
+}
+
 type NotFoundUserOfId struct {
 	UserId int
 }
@@ -70,6 +74,10 @@ func (e *NotFoundUser) Error() string {
 
 func (e *NotFoundUserByMacAddress) Error() string {
 	return fmt.Sprintf("User with mac address %s not found", e.MacAddress)
+}
+
+func (e *NotFoundUserByTelegramId) Error() string {
+	return fmt.Sprintf("User with telegram id %d not found", e.TelegramId)
 }
 
 func (e *NotFoundUserOfId) Error() string {
