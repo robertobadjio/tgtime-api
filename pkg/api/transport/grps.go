@@ -2,7 +2,7 @@ package transport
 
 import (
 	grpctransport "github.com/go-kit/kit/transport/grpc"
-	"github.com/robertobadjio/tgtime-api/api/v1/pb/api"
+	"github.com/robertobadjio/tgtime-api/api/v1/pb/apisvc"
 	"github.com/robertobadjio/tgtime-api/pkg/api/endpoints"
 )
 

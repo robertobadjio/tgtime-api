@@ -19,9 +19,9 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Api_GetRouters_FullMethodName          = "/Api/GetRouters"
-	Api_GetUserByMacAddress_FullMethodName = "/Api/GetUserByMacAddress"
-	Api_GetUserByTelegramId_FullMethodName = "/Api/GetUserByTelegramId"
+	Api_GetRouters_FullMethodName          = "/apisvc.Api/GetRouters"
+	Api_GetUserByMacAddress_FullMethodName = "/apisvc.Api/GetUserByMacAddress"
+	Api_GetUserByTelegramId_FullMethodName = "/apisvc.Api/GetUserByTelegramId"
 )
 
 // ApiClient is the client API for Api service.
@@ -162,7 +162,7 @@ func _Api_GetUserByTelegramId_Handler(srv interface{}, ctx context.Context, dec 
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var Api_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "Api",
+	ServiceName: "apisvc.Api",
 	HandlerType: (*ApiServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

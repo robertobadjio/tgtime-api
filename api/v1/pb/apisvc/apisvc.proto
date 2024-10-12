@@ -1,5 +1,7 @@
 syntax = 'proto3';
 
+package apisvc;
+
 option go_package = "./apisvc";
 
 service Api {
