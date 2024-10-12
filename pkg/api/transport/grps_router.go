@@ -9,17 +9,17 @@ import (
 
 func (g *grpcServer) GetRouters(
 	ctx context.Context,
-	request *api.GetRoutersRequest,
-) (*api.GetRoutersResponse, error) {
+	request *apisvc.GetRoutersRequest,
+) (*apisvc.GetRoutersResponse, error) {
 	_, response, err := g.getRouters.ServeGRPC(ctx, request)
 	if err != nil {
 		return nil, err
 	}
-	return response.(*api.GetRoutersResponse), nil
+	return response.(*apisvc.GetRoutersResponse), nil
 }
 
 func decodeGRPCGetRoutersRequest(_ context.Context, grpcRequest interface{}) (interface{}, error) {
-	_ = grpcRequest.(*api.GetRoutersRequest)
+	_ = grpcRequest.(*apisvc.GetRoutersRequest)
 	return endpoints.GetRoutersRequest{}, nil
 }
 
@@ -29,9 +29,9 @@ func encodeGRPCGetRoutersResponse(_ context.Context, grpcResponse interface{}) (
 		return nil, errors.New("invalid response body")
 	}
 
-	var routers []*api.Router
+	var routers []*apisvc.Router
 	for _, r := range resp.Routers {
-		router := api.Router{
+		router := apisvc.Router{
 			Id:          int64(r.Id),
 			Name:        r.Name,
 			Description: r.Description,
@@ -44,5 +44,5 @@ func encodeGRPCGetRoutersResponse(_ context.Context, grpcResponse interface{}) (
 		routers = append(routers, &router)
 	}
 
-	return &api.GetRoutersResponse{Routers: routers}, nil
+	return &apisvc.GetRoutersResponse{Routers: routers}, nil
 }

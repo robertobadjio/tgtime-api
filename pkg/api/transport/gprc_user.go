@@ -9,17 +9,17 @@ import (
 
 func (g *grpcServer) GetUserByMacAddress(
 	ctx context.Context,
-	request *api.GetUserByMacAddressRequest,
-) (*api.GetUserByMacAddressResponse, error) {
+	request *apisvc.GetUserByMacAddressRequest,
+) (*apisvc.GetUserByMacAddressResponse, error) {
 	_, response, err := g.getUserByMacAddress.ServeGRPC(ctx, request)
 	if err != nil {
 		return nil, err
 	}
-	return response.(*api.GetUserByMacAddressResponse), nil
+	return response.(*apisvc.GetUserByMacAddressResponse), nil
 }
 
 func decodeGRPCGetUserByMacAddressRequest(_ context.Context, grpcRequest interface{}) (interface{}, error) {
-	req := grpcRequest.(*api.GetUserByMacAddressRequest)
+	req := grpcRequest.(*apisvc.GetUserByMacAddressRequest)
 	return endpoints.GetUserByMacAddressRequest{MacAddress: req.MacAddress}, nil
 }
 
@@ -29,7 +29,7 @@ func encodeGRPCGetUserByMacAddressResponse(_ context.Context, grpcResponse inter
 		return nil, errors.New("invalid response body")
 	}
 
-	user := api.User{
+	user := apisvc.User{
 		Id:         int64(resp.User.Id),
 		Name:       resp.User.Name,
 		Surname:    resp.User.Surname,
@@ -43,23 +43,23 @@ func encodeGRPCGetUserByMacAddressResponse(_ context.Context, grpcResponse inter
 		Position:   resp.User.Position,
 	}
 
-	return &api.GetUserByMacAddressResponse{User: &user}, nil
+	return &apisvc.GetUserByMacAddressResponse{User: &user}, nil
 }
 
 func (g *grpcServer) GetUserByTelegramId(
 	ctx context.Context,
-	request *api.GetUserByTelegramIdRequest,
-) (*api.GetUserByTelegramIdResponse, error) {
+	request *apisvc.GetUserByTelegramIdRequest,
+) (*apisvc.GetUserByTelegramIdResponse, error) {
 	_, response, err := g.getUserByTelegramId.ServeGRPC(ctx, request)
 	if err != nil {
 		return nil, err
 	}
 
-	return response.(*api.GetUserByTelegramIdResponse), nil
+	return response.(*apisvc.GetUserByTelegramIdResponse), nil
 }
 
 func decodeGRPCGetUserByTelegramIdRequest(_ context.Context, grpcRequest interface{}) (interface{}, error) {
-	req := grpcRequest.(*api.GetUserByTelegramIdRequest)
+	req := grpcRequest.(*apisvc.GetUserByTelegramIdRequest)
 	return endpoints.GetUserByTelegramIdRequest{TelegramId: req.TelegramId}, nil
 }
 
@@ -69,7 +69,7 @@ func encodeGRPCGetUserByTelegramIdResponse(_ context.Context, grpcResponse inter
 		return nil, errors.New("invalid response body")
 	}
 
-	user := api.User{
+	user := apisvc.User{
 		Id:         int64(resp.User.Id),
 		Name:       resp.User.Name,
 		Surname:    resp.User.Surname,
@@ -83,5 +83,5 @@ func encodeGRPCGetUserByTelegramIdResponse(_ context.Context, grpcResponse inter
 		Position:   resp.User.Position,
 	}
 
-	return &api.GetUserByTelegramIdResponse{User: &user}, nil
+	return &apisvc.GetUserByTelegramIdResponse{User: &user}, nil
 }
