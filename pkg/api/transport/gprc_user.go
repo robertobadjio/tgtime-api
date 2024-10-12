@@ -3,7 +3,7 @@ package transport
 import (
 	"context"
 	"errors"
-	"github.com/robertobadjio/tgtime-api/api/v1/pb/apisvc"
+	apisvc "github.com/robertobadjio/tgtime-api/api/v1/pb/api"
 	"github.com/robertobadjio/tgtime-api/pkg/api/endpoints"
 )
 

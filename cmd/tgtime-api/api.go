@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	kitgrpc "github.com/go-kit/kit/transport/grpc"
-	pb "github.com/robertobadjio/tgtime-api/api/v1/pb/apisvc"
+	pb "github.com/robertobadjio/tgtime-api/api/v1/pb/api"
 	"github.com/robertobadjio/tgtime-api/internal/config"
 	"github.com/robertobadjio/tgtime-api/internal/db"
 	departmentAdapter "github.com/robertobadjio/tgtime-api/internal/model/department/adapter"
