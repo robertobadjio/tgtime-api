@@ -4,7 +4,7 @@
 // - protoc             v4.25.3
 // source: apisvc.proto
 
-package api
+package apisvc
 
 import (
 	context "context"
@@ -19,9 +19,9 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Api_GetRouters_FullMethodName          = "/pb.Api/GetRouters"
-	Api_GetUserByMacAddress_FullMethodName = "/pb.Api/GetUserByMacAddress"
-	Api_GetUserByTelegramId_FullMethodName = "/pb.Api/GetUserByTelegramId"
+	Api_GetRouters_FullMethodName          = "/Api/GetRouters"
+	Api_GetUserByMacAddress_FullMethodName = "/Api/GetUserByMacAddress"
+	Api_GetUserByTelegramId_FullMethodName = "/Api/GetUserByTelegramId"
 )
 
 // ApiClient is the client API for Api service.
@@ -162,7 +162,7 @@ func _Api_GetUserByTelegramId_Handler(srv interface{}, ctx context.Context, dec 
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var Api_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "pb.Api",
+	ServiceName: "Api",
 	HandlerType: (*ApiServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

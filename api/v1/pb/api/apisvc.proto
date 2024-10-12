@@ -1,8 +1,6 @@
 syntax = 'proto3';
 
-package pb;
-
-option go_package = "./api";
+option go_package = "./apisvc";
 
 service Api {
   rpc GetRouters (GetRoutersRequest) returns (GetRoutersResponse) {}
